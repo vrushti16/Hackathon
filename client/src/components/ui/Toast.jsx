@@ -106,4 +106,13 @@ export const ToastContainer = () => {
   );
 };
 
+export const useToast = () => {
+  const { triggerToast } = useFleet();
+  return {
+    addToast: (message, type = 'success') => {
+      triggerToast(message, type);
+    }
+  };
+};
+
 export default ToastContainer;
