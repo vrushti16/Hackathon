@@ -33,19 +33,17 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
 
-              {/* Root redirect */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
               {/* Authenticated Dashboard Core */}
               <Route
-                path="/dashboard"
+                path="/"
                 element={
                   <ProtectedRoute>
                     <DashboardLayout />
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Dashboard />} />
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<Dashboard />} />
                 <Route path="vehicles" element={<Vehicles />} />
                 <Route path="maintenance" element={<Maintenance />} />
                 <Route path="reports" element={<Reports />} />
