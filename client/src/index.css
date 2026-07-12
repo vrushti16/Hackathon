@@ -180,5 +180,20 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s;
-  -webkit-text-fill-color: inherit !important;
+  -webkit-text-fill-color: #1E293B !important;
 }
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover, 
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Global Dark Mode Input Text Color Fallback */
+.dark input, 
+.dark select, 
+.dark textarea {
+  color: #ffffff;
+}
+
