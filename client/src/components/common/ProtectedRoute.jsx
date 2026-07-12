@@ -1,11 +1,11 @@
 // ProtectedRoute.jsx - Auth Guard for TransitOps
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../auth/useAuth';
 import Loader from './Loader';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading, hasRole } = useAuth();
 
   if (loading) {
     return (
@@ -19,8 +19,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Role authorization check
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+  if (allowedRoles && !hasRole(allowedRoles)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
