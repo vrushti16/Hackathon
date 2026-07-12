@@ -17,21 +17,20 @@ const authRoute = require('./routes/authRoute');
 const vehicleRoute = require('./routes/vehicleRoute');
 const driverRoute = require('./routes/driverRoute');
 const maintenanceRoute = require('./routes/maintenanceRoute');
+const tripRoute = require('./routes/tripRoute');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
 app.use('/api/auth', authRoute);
 app.use('/api/vehicles', vehicleRoute);
 app.use('/api/drivers', driverRoute);
 app.use('/api/maintenance', maintenanceRoute);
+app.use('/api/trips', tripRoute);
 
-// Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
@@ -40,7 +39,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// MongoDB Connection
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI);
@@ -51,7 +49,6 @@ const connectDB = async () => {
   }
 };
 
-// Start Server
 connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
