@@ -1,12 +1,20 @@
 import React, { useMemo, useState } from 'react';
-import { Plus, Search, Filter, AlertTriangle, ShieldAlert, BadgeCheck } from 'lucide-react';
-import SearchBar from '../../components/common/SearchBar';
-import Table from '../../components/common/Table';
-import Pagination from '../../components/common/Pagination';
-import Modal from '../../components/common/Modal';
-import EmptyState from '../../components/common/EmptyState';
-import DriverCard from '../../components/driver/DriverCard';
+import { Plus, AlertTriangle, ShieldAlert, BadgeCheck } from 'lucide-react';
 import { formatDate } from '../../utils/formatters';
+
+// UI components
+import PageHeader from '../../components/ui/PageHeader';
+import FilterBar from '../../components/ui/FilterBar';
+import Table from '../../components/ui/Table';
+import Pagination from '../../components/ui/Pagination';
+import Modal from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import EmptyState from '../../components/ui/EmptyState';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
+import Button from '../../components/ui/Button';
+import Card from '../../components/ui/Card';
+import DriverCard from '../../components/driver/DriverCard';
 
 const initialDrivers = [
   { id: 'd-1', name: 'Maya Chen', licenseNumber: 'DL-4021', category: 'Class A', expiryDate: '2026-09-12', contact: '+1 415 555 0188', safetyScore: 92, status: 'Available' },
@@ -21,6 +29,8 @@ const DriversPage = () => {
   const [page, setPage] = useState(1);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [driverIdToDelete, setDriverIdToDelete] = useState(null);
   const [sortKey, setSortKey] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const pageSize = 4;
@@ -42,10 +52,10 @@ const DriversPage = () => {
 
   const statusTone = (status) => {
     switch (status) {
-      case 'Available': return 'bg-brand-green/10 text-brand-green';
-      case 'On Trip': return 'bg-brand-blue/10 text-brand-blue';
-      case 'Suspended': return 'bg-brand-red/10 text-brand-red';
-      default: return 'bg-brand-slate-100 text-brand-slate-600';
+      case 'Available': return 'bg-brand-green/10 text-brand-green border-brand-green/20';
+      case 'On Trip': return 'bg-brand-blue/10 text-brand-blue border-brand-blue/20';
+      case 'Suspended': return 'bg-brand-red/10 text-brand-red border-brand-red/20';
+      default: return 'bg-brand-slate-100 dark:bg-brand-slate-900 text-brand-slate-600 dark:text-brand-slate-400 border-brand-slate-250 dark:border-brand-slate-850';
     }
   };
 
@@ -69,8 +79,15 @@ const DriversPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteDriver = (id) => {
-    setDrivers((prev) => prev.filter((driver) => driver.id !== id));
+  const handleDeleteDriverClick = (id) => {
+    setDriverIdToDelete(id);
+    setIsConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDeleteDriver = () => {
+    setDrivers((prev) => prev.filter((driver) => driver.id !== driverIdToDelete));
+    setIsConfirmDeleteOpen(false);
+    setDriverIdToDelete(null);
   };
 
   const handleSubmit = (event) => {
@@ -96,121 +113,234 @@ const DriversPage = () => {
   };
 
   const columns = [
-    { key: 'name', header: 'Driver Name', sortable: true, render: (value, row) => <div><p className="font-semibold text-brand-slate-800">{value}</p><p className="text-xs text-brand-slate-500">{row.category}</p></div> },
+    { 
+      key: 'name', 
+      header: 'Driver Name', 
+      sortable: true, 
+      render: (value, row) => (
+        <div>
+          <p className="font-bold text-brand-slate-800 dark:text-white">{value}</p>
+          <p className="text-[10px] font-semibold text-brand-slate-400 dark:text-brand-slate-500 mt-0.5">{row.category}</p>
+        </div>
+      ) 
+    },
     { key: 'licenseNumber', header: 'License Number', sortable: true },
     { key: 'category', header: 'Category', sortable: true },
     { key: 'expiryDate', header: 'Expiry Date', sortable: true, render: (value) => formatDate(value) },
     { key: 'contact', header: 'Contact' },
-    { key: 'safetyScore', header: 'Safety Score', sortable: true, render: (value) => <div className="flex items-center gap-2"><div className="h-2 w-24 rounded-full bg-brand-slate-200"><div className="h-2 rounded-full bg-brand-blue" style={{ width: `${value}%` }} /></div><span>{value}</span></div> },
-    { key: 'status', header: 'Status', sortable: true, render: (value) => <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(value)}`}>{value}</span> },
-    { key: 'actions', header: 'Actions', render: (_, row) => (
-      <div className="flex gap-2">
-        <button onClick={() => handleEditDriver(row)} className="rounded-lg border border-brand-slate-200 px-2 py-1 text-xs font-semibold text-brand-slate-700">Edit</button>
-        <button onClick={() => handleDeleteDriver(row.id)} className="rounded-lg bg-brand-red/10 px-2 py-1 text-xs font-semibold text-brand-red">Delete</button>
-      </div>
-    ) }
+    { 
+      key: 'safetyScore', 
+      header: 'Safety Score', 
+      sortable: true, 
+      render: (value) => (
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-24 rounded-full bg-brand-slate-200 dark:bg-brand-slate-800 overflow-hidden">
+            <div className="h-full rounded-full bg-brand-blue" style={{ width: `${value}%` }} />
+          </div>
+          <span className="font-bold text-brand-slate-700 dark:text-brand-slate-350">{value}</span>
+        </div>
+      ) 
+    },
+    { 
+      key: 'status', 
+      header: 'Status', 
+      sortable: true, 
+      render: (value) => (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-wide uppercase ${statusTone(value)}`}>
+          <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 animate-pulse" />
+          {value}
+        </span>
+      ) 
+    },
+    { 
+      key: 'actions', 
+      header: 'Actions', 
+      render: (_, row) => (
+        <div className="flex gap-2">
+          <Button onClick={() => handleEditDriver(row)} variant="outline" size="sm">
+            Edit
+          </Button>
+          <Button onClick={() => handleDeleteDriverClick(row.id)} variant="outline" size="sm" className="text-brand-red hover:bg-brand-red/5 border-brand-red/10">
+            Delete
+          </Button>
+        </div>
+      ) 
+    }
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-3xl border border-brand-slate-200 bg-white/70 p-5 shadow-sm dark:border-brand-slate-800 dark:bg-brand-slate-900/60 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-blue">Driver Management</p>
-          <h1 className="text-2xl font-bold text-brand-slate-900 dark:text-white">Enterprise driver operations</h1>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <button onClick={handleAddDriver} className="inline-flex items-center gap-2 rounded-xl bg-brand-blue px-4 py-2 text-sm font-semibold text-white">
-            <Plus className="h-4 w-4" /> Add Driver
-          </button>
-        </div>
-      </div>
+    <div className="space-y-6 animate-fade-in">
+      
+      {/* Page Header */}
+      <PageHeader
+        title="Driver Management"
+        subtitle="Manage fleet driver registrations, licensing safety compliance, and roster tracking."
+      >
+        <Button onClick={handleAddDriver} icon={Plus} variant="primary">
+          Add Driver
+        </Button>
+      </PageHeader>
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="w-full max-w-xl">
-          <SearchBar value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search drivers" onClear={() => setSearch('')} />
-        </div>
-        <div className="flex items-center gap-2 rounded-xl border border-brand-slate-200 bg-white/70 px-3 py-2 text-sm text-brand-slate-600">
-          <Filter className="h-4 w-4" /> Sort & filter ready
-        </div>
-      </div>
+      {/* Filter and Search Bar */}
+      <FilterBar
+        searchVal={search}
+        onSearchChange={(event) => { setSearch(event.target.value); setPage(1); }}
+        searchPlaceholder="Search drivers by name, category..."
+        onReset={search ? () => { setSearch(''); setPage(1); } : null}
+      />
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* KPI Cards Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {drivers.slice(0, 3).map((driver) => {
           const licenseInfo = licenseState(driver.expiryDate, driver.status);
           const Icon = licenseInfo.icon;
           return (
-            <div key={driver.id} className="rounded-2xl border border-brand-slate-200 bg-white/70 p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-brand-slate-900">{driver.name}</p>
-                <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(driver.status)}`}>{driver.status}</span>
+            <Card
+              key={driver.id}
+              title={driver.name}
+              action={
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-wide uppercase ${statusTone(driver.status)}`}>
+                  {driver.status}
+                </span>
+              }
+            >
+              <div className="flex items-center gap-2 text-xs font-semibold mt-1">
+                <Icon className={`h-4 w-4 ${licenseInfo.tone}`} /> 
+                <span className={licenseInfo.tone}>{licenseInfo.label}</span>
               </div>
-              <div className="mt-3 flex items-center gap-2 text-sm text-brand-slate-600">
-                <Icon className={`h-4 w-4 ${licenseInfo.tone}`} /> <span className={licenseInfo.tone}>{licenseInfo.label}</span>
+              <div className="mt-4">
+                <div className="h-1.5 rounded-full bg-brand-slate-200 dark:bg-brand-slate-800 overflow-hidden">
+                  <div className="h-full rounded-full bg-brand-blue" style={{ width: `${driver.safetyScore}%` }} />
+                </div>
+                <p className="mt-2 text-[10px] text-brand-slate-500 font-bold">Safety score {driver.safetyScore}/100</p>
               </div>
-              <div className="mt-4 h-2 rounded-full bg-brand-slate-200">
-                <div className="h-2 rounded-full bg-brand-blue" style={{ width: `${driver.safetyScore}%` }} />
-              </div>
-              <p className="mt-2 text-xs text-brand-slate-500">Safety score {driver.safetyScore}/100</p>
-            </div>
+            </Card>
           );
         })}
       </div>
 
+      {/* Desktop Table View */}
       <div className="hidden lg:block">
-        <Table columns={columns} data={pagedDrivers} sortKey={sortKey} sortOrder={sortOrder} onSort={(key, order) => { setSortKey(key); setSortOrder(order); setPage(1); }} emptyState={<EmptyState title="No drivers found" description="Add a driver to start tracking licensing and safety metrics." />} />
+        <Table 
+          columns={columns} 
+          data={pagedDrivers} 
+          sortKey={sortKey} 
+          sortOrder={sortOrder} 
+          onSort={(key, order) => { setSortKey(key); setSortOrder(order); setPage(1); }} 
+          emptyState={
+            <EmptyState 
+              type="drivers" 
+              actionText="Clear Filters" 
+              onActionClick={() => { setSearch(''); setPage(1); }} 
+            />
+          } 
+        />
       </div>
 
+      {/* Mobile Card View */}
       <div className="grid gap-4 lg:hidden">
         {pagedDrivers.length > 0 ? pagedDrivers.map((driver) => (
-          <DriverCard key={driver.id} driver={driver} onView={() => setSelectedDriver(driver)} onEdit={handleEditDriver} onDelete={handleDeleteDriver} />
-        )) : <EmptyState title="No drivers found" description="Add a driver to start tracking licensing and safety metrics." />}
+          <DriverCard key={driver.id} driver={driver} onView={() => setSelectedDriver(driver)} onEdit={handleEditDriver} onDelete={handleDeleteDriverClick} />
+        )) : (
+          <EmptyState 
+            type="drivers" 
+            actionText="Clear Filters" 
+            onActionClick={() => { setSearch(''); setPage(1); }} 
+          />
+        )}
       </div>
 
+      {/* Pagination */}
       <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={selectedDriver ? 'Edit Driver' : 'Add Driver'} size="lg">
+      {/* --- ADD / EDIT DRIVER MODAL --- */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={selectedDriver ? 'Edit Driver Details' : 'Add New Driver'} size="lg">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-semibold">Driver Name</label>
-              <input defaultValue={selectedDriver?.name || ''} name="name" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold">License Number</label>
-              <input defaultValue={selectedDriver?.licenseNumber || ''} name="licenseNumber" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold">Category</label>
-              <input defaultValue={selectedDriver?.category || ''} name="category" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold">Expiry Date</label>
-              <input type="date" defaultValue={selectedDriver?.expiryDate || ''} name="expiryDate" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold">Contact</label>
-              <input defaultValue={selectedDriver?.contact || ''} name="contact" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold">Safety Score</label>
-              <input type="number" min="0" max="100" defaultValue={selectedDriver?.safetyScore || 90} name="safetyScore" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
-            </div>
+            <Input 
+              label="Driver Name" 
+              id="name"
+              name="name" 
+              defaultValue={selectedDriver?.name || ''} 
+              required 
+            />
+            <Input 
+              label="License Number" 
+              id="licenseNumber"
+              name="licenseNumber" 
+              defaultValue={selectedDriver?.licenseNumber || ''} 
+              required 
+            />
+            <Input 
+              label="Category" 
+              id="category"
+              name="category" 
+              defaultValue={selectedDriver?.category || ''} 
+              placeholder="e.g. Class A, Class B"
+              required 
+            />
+            <Input 
+              label="Expiry Date" 
+              id="expiryDate"
+              name="expiryDate" 
+              type="date"
+              defaultValue={selectedDriver?.expiryDate || ''} 
+              required 
+            />
+            <Input 
+              label="Contact Number" 
+              id="contact"
+              name="contact" 
+              defaultValue={selectedDriver?.contact || ''} 
+              placeholder="+1 555 0199"
+              required 
+            />
+            <Input 
+              label="Safety Score (0-100)" 
+              id="safetyScore"
+              name="safetyScore" 
+              type="number"
+              min="0"
+              max="100"
+              defaultValue={selectedDriver?.safetyScore || 90} 
+              required 
+            />
           </div>
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Status</label>
-            <select defaultValue={selectedDriver?.status || 'Available'} name="status" className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm">
-              <option value="Available">Available</option>
-              <option value="On Trip">On Trip</option>
-              <option value="Off Duty">Off Duty</option>
-              <option value="Suspended">Suspended</option>
-            </select>
-          </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-brand-slate-200 px-4 py-2 text-sm font-semibold text-brand-slate-700">Cancel</button>
-            <button type="submit" className="rounded-xl bg-brand-blue px-4 py-2 text-sm font-semibold text-white">Save Driver</button>
+          
+          <Select
+            label="Roster Status"
+            id="status"
+            name="status"
+            defaultValue={selectedDriver?.status || 'Available'}
+            options={['Available', 'On Trip', 'Off Duty', 'Suspended']}
+            placeholder={null}
+          />
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-brand-slate-100 dark:border-brand-slate-900">
+            <Button type="button" onClick={() => setIsModalOpen(false)} variant="secondary">
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Save Driver
+            </Button>
           </div>
         </form>
       </Modal>
+
+      {/* --- CONFIRM DELETE DIALOG --- */}
+      <ConfirmDialog
+        isOpen={isConfirmDeleteOpen}
+        onClose={() => {
+          setIsConfirmDeleteOpen(false);
+          setDriverIdToDelete(null);
+        }}
+        onConfirm={handleConfirmDeleteDriver}
+        title="Delete Driver Profile"
+        message="Are you sure you want to permanently delete this driver profile? This action cannot be undone."
+        confirmText="Delete Profile"
+        isDanger={true}
+      />
+
     </div>
   );
 };

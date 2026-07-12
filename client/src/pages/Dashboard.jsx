@@ -8,11 +8,11 @@ import {
   DollarSign, 
   Users, 
   TrendingUp, 
-  HelpCircle,
   Clock,
   Layers,
   MapPin,
-  RefreshCw
+  RefreshCw,
+  HelpCircle
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -26,14 +26,19 @@ import {
   XAxis, 
   YAxis, 
   Tooltip, 
-  Legend, 
   CartesianGrid 
 } from 'recharts';
 import { useFleet } from '../context/FleetContext';
-import KpiCard from '../components/common/KpiCard';
-import StatusBadge from '../components/common/StatusBadge';
+
+// UI components
+import PageHeader from '../components/ui/PageHeader';
+import FilterBar from '../components/ui/FilterBar';
+import Select from '../components/ui/Select';
+import StatCard from '../components/ui/StatCard';
+import Card from '../components/ui/Card';
+import EmptyState from '../components/ui/EmptyState';
+import Button from '../components/ui/Button';
 import { ChartSkeleton } from '../components/common/Skeleton';
-import EmptyState from '../components/common/EmptyState';
 
 const Dashboard = () => {
   const { 
@@ -146,7 +151,7 @@ const Dashboard = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="p-3 bg-brand-slate-900/90 dark:bg-black/90 text-white rounded-lg border border-brand-slate-800 text-xs shadow-lg backdrop-blur-md">
+        <div className="p-3 bg-brand-slate-900/90 dark:bg-black/90 text-white rounded-lg border border-brand-slate-800 text-[10px] shadow-lg backdrop-blur-md">
           <p className="font-semibold">{label}</p>
           {payload.map((p, idx) => (
             <p key={idx} style={{ color: p.color || '#2563EB' }} className="mt-1 font-medium">
@@ -159,88 +164,82 @@ const Dashboard = () => {
     return null;
   };
 
+  const hasActiveFilters = Object.values(filters).some(f => f !== 'All');
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       
+      {/* Page Header */}
+      <PageHeader 
+        title="Fleet & Logistics Dashboard" 
+        subtitle="Real-time operational metrics and visual analytics logs."
+      />
+
       {/* 1. Header Filter Bar Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl glass-panel">
-        <div className="flex flex-wrap items-center gap-3">
-          
-          {/* Vehicle Type Filter */}
-          <div className="flex flex-col space-y-1">
-            <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider flex items-center">
-              <Layers className="w-3 h-3 mr-1" /> Vehicle Type
-            </span>
-            <select
-              value={filters.vehicleType}
-              onChange={(e) => updateFilter('vehicleType', e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
-            >
-              {filterOptions.types.map(t => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Status Filter */}
-          <div className="flex flex-col space-y-1">
-            <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider flex items-center">
-              <HelpCircle className="w-3 h-3 mr-1" /> Status
-            </span>
-            <select
-              value={filters.status}
-              onChange={(e) => updateFilter('status', e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
-            >
-              {filterOptions.statuses.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Region Filter */}
-          <div className="flex flex-col space-y-1">
-            <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider flex items-center">
-              <MapPin className="w-3 h-3 mr-1" /> Region
-            </span>
-            <select
-              value={filters.region}
-              onChange={(e) => updateFilter('region', e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
-            >
-              {filterOptions.regions.map(r => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
-
-        </div>
-
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          {Object.values(filters).some(f => f !== 'All') && (
-            <button
-              onClick={resetFilters}
-              type="button"
-              className="px-3 py-1.5 text-xs font-semibold text-brand-slate-500 dark:text-brand-slate-400 hover:text-brand-blue transition-colors cursor-pointer"
-            >
-              Clear Filters
-            </button>
-          )}
-          <button
-            onClick={fetchDashboardMetrics}
-            disabled={loading.dashboard}
-            type="button"
-            className="p-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 text-brand-slate-500 dark:text-brand-slate-400 hover:text-brand-blue hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900 disabled:opacity-50 transition-all cursor-pointer"
-            title="Refresh Metrics"
+      <FilterBar
+        onReset={hasActiveFilters ? resetFilters : null}
+      >
+        {/* Vehicle Type Filter */}
+        <div className="flex flex-col space-y-1">
+          <span className="text-[9px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider flex items-center">
+            <Layers className="w-2.5 h-2.5 mr-1" /> Vehicle Type
+          </span>
+          <select
+            value={filters.vehicleType}
+            onChange={(e) => updateFilter('vehicleType', e.target.value)}
+            className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-[10px] font-semibold text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${loading.dashboard ? 'animate-spin' : ''}`} />
-          </button>
+            {filterOptions.types.map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
         </div>
-      </div>
+
+        {/* Status Filter */}
+        <div className="flex flex-col space-y-1">
+          <span className="text-[9px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider flex items-center">
+            <HelpCircle className="w-2.5 h-2.5 mr-1" /> Status
+          </span>
+          <select
+            value={filters.status}
+            onChange={(e) => updateFilter('status', e.target.value)}
+            className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-[10px] font-semibold text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
+          >
+            {filterOptions.statuses.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Region Filter */}
+        <div className="flex flex-col space-y-1">
+          <span className="text-[9px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider flex items-center">
+            <MapPin className="w-2.5 h-2.5 mr-1" /> Region
+          </span>
+          <select
+            value={filters.region}
+            onChange={(e) => updateFilter('region', e.target.value)}
+            className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-[10px] font-semibold text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
+          >
+            {filterOptions.regions.map(r => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </div>
+
+        <Button
+          onClick={fetchDashboardMetrics}
+          disabled={loading.dashboard}
+          variant="outline"
+          size="sm"
+          icon={RefreshCw}
+          className="self-end"
+        />
+      </FilterBar>
 
       {/* 2. KPI Cards Grid Layout */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KpiCard
+        <StatCard
           title="Active Vehicles"
           value={metrics.active}
           icon={Car}
@@ -248,7 +247,7 @@ const Dashboard = () => {
           trendLabel="vs fleet size"
           isLoading={loading.vehicles || loading.dashboard}
         />
-        <KpiCard
+        <StatCard
           title="Available Vehicles"
           value={metrics.available}
           icon={CheckCircle2}
@@ -256,7 +255,7 @@ const Dashboard = () => {
           trendLabel="ready for dispatch"
           isLoading={loading.vehicles || loading.dashboard}
         />
-        <KpiCard
+        <StatCard
           title="Vehicles In Shop"
           value={metrics.inShop}
           icon={Wrench}
@@ -265,7 +264,7 @@ const Dashboard = () => {
           trendLabel="undergoing service"
           isLoading={loading.vehicles || loading.dashboard}
         />
-        <KpiCard
+        <StatCard
           title="Active Trips"
           value={metrics.activeTrips}
           icon={Compass}
@@ -273,7 +272,7 @@ const Dashboard = () => {
           trendLabel="vs yesterday"
           isLoading={loading.dashboard}
         />
-        <KpiCard
+        <StatCard
           title="Pending Trips"
           value={metrics.pendingTrips}
           icon={Clock}
@@ -281,7 +280,7 @@ const Dashboard = () => {
           trendLabel="in queue"
           isLoading={loading.dashboard}
         />
-        <KpiCard
+        <StatCard
           title="Drivers On Duty"
           value={metrics.drivers}
           icon={Users}
@@ -289,7 +288,7 @@ const Dashboard = () => {
           trendLabel="vs yesterday"
           isLoading={loading.dashboard}
         />
-        <KpiCard
+        <StatCard
           title="Fleet Utilization %"
           value={`${metrics.utilization}%`}
           icon={TrendingUp}
@@ -297,7 +296,7 @@ const Dashboard = () => {
           trendLabel="ideal capacity is 85%"
           isLoading={loading.vehicles || loading.dashboard}
         />
-        <KpiCard
+        <StatCard
           title="Operational Cost"
           value={metrics.operationalCost}
           icon={DollarSign}
@@ -325,11 +324,10 @@ const Dashboard = () => {
               {loading.dashboard || !chartsData ? (
                 <ChartSkeleton />
               ) : (
-                <div className="glass-panel p-6 rounded-xl space-y-4">
-                  <div>
-                    <h4 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Trips per Day</h4>
-                    <p className="text-[10px] text-brand-slate-400 dark:text-brand-slate-500">Trip frequencies over the last 7 days</p>
-                  </div>
+                <Card 
+                  title="Trips per Day"
+                  subtitle="Trip frequencies over the last 7 days"
+                >
                   <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={chartsData.tripsPerDay} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -340,14 +338,14 @@ const Dashboard = () => {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-brand-slate-900" />
-                        <XAxis dataKey="name" stroke="#64748B" fontSize={11} tickLine={false} />
-                        <YAxis stroke="#64748B" fontSize={11} tickLine={false} />
+                        <XAxis dataKey="name" stroke="#64748B" fontSize={10} tickLine={false} />
+                        <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Area type="monotone" dataKey="trips" stroke="#2563EB" strokeWidth={2.5} fillOpacity={1} fill="url(#colorTrips)" name="Completed Trips" />
+                        <Area type="monotone" dataKey="trips" stroke="#2563EB" strokeWidth={2} fillOpacity={1} fill="url(#colorTrips)" name="Completed Trips" />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
-                </div>
+                </Card>
               )}
             </div>
 
@@ -356,20 +354,20 @@ const Dashboard = () => {
               {loading.vehicles || loading.dashboard || !chartsData ? (
                 <ChartSkeleton />
               ) : (
-                <div className="glass-panel p-6 rounded-xl space-y-4 flex flex-col justify-between h-full">
-                  <div>
-                    <h4 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Vehicle Allocation</h4>
-                    <p className="text-[10px] text-brand-slate-400 dark:text-brand-slate-500">Current status distributions</p>
-                  </div>
-                  <div className="h-56 relative flex items-center justify-center">
+                <Card
+                  title="Vehicle Allocation"
+                  subtitle="Current status distributions"
+                  className="flex flex-col justify-between h-full"
+                >
+                  <div className="h-48 relative flex items-center justify-center">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={chartsData.vehicleStatusPie}
                           cx="50%"
                           cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
+                          innerRadius={55}
+                          outerRadius={70}
                           paddingAngle={5}
                           dataKey="value"
                         >
@@ -382,18 +380,18 @@ const Dashboard = () => {
                     </ResponsiveContainer>
                     <div className="absolute text-center">
                       <p className="text-2xl font-bold font-display text-brand-slate-800 dark:text-white">{metrics.total}</p>
-                      <p className="text-[9px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Vehicles</p>
+                      <p className="text-[8px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Vehicles</p>
                     </div>
                   </div>
-                  <div className="flex justify-center gap-4 text-xs font-semibold mt-2">
+                  <div className="flex justify-center gap-4 text-[10px] font-bold mt-2">
                     {chartsData.vehicleStatusPie.map(item => (
                       <div key={item.name} className="flex items-center space-x-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                        <span className="w-2 rounded-full h-2" style={{ backgroundColor: item.color }} />
                         <span className="text-brand-slate-500 dark:text-brand-slate-400">{item.name} ({item.value})</span>
                       </div>
                     ))}
                   </div>
-                </div>
+                </Card>
               )}
             </div>
 
@@ -406,58 +404,56 @@ const Dashboard = () => {
               {loading.dashboard || !chartsData ? (
                 <ChartSkeleton />
               ) : (
-                <div className="glass-panel p-6 rounded-xl space-y-4">
-                  <div>
-                    <h4 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Maintenance Costs</h4>
-                    <p className="text-[10px] text-brand-slate-400 dark:text-brand-slate-500">Monthly repair & inspection costs in USD</p>
-                  </div>
+                <Card
+                  title="Maintenance Costs"
+                  subtitle="Monthly repair & inspection costs in USD"
+                >
                   <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={chartsData.maintenanceTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-brand-slate-900" />
-                        <XAxis dataKey="name" stroke="#64748B" fontSize={11} tickLine={false} />
-                        <YAxis stroke="#64748B" fontSize={11} tickLine={false} />
+                        <XAxis dataKey="name" stroke="#64748B" fontSize={10} tickLine={false} />
+                        <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="cost" fill="#F97316" radius={[4, 4, 0, 0]} name="Repair Cost ($)" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                </div>
+                </Card>
               )}
             </div>
 
             {/* Recent Activities Panel */}
             <div className="flex flex-col">
-              <div className="glass-panel p-6 rounded-xl space-y-4 flex-1 flex flex-col justify-between max-h-95">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Live Fleet Activities</h4>
-                    <p className="text-[10px] text-brand-slate-400 dark:text-brand-slate-500">Realtime operations journal</p>
-                  </div>
+              <Card
+                title="Live Fleet Activities"
+                subtitle="Realtime operations journal"
+                className="flex-1 flex flex-col justify-between max-h-96"
+                action={
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-green opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-green"></span>
                   </span>
-                </div>
-
-                <div className="divide-y divide-brand-slate-100 dark:divide-brand-slate-900 overflow-y-auto flex-1 mt-4 pr-1 space-y-1">
+                }
+              >
+                <div className="divide-y divide-brand-slate-100 dark:divide-brand-slate-900 overflow-y-auto flex-1 pr-1 space-y-1 scrollbar">
                   {dashboardMetrics?.recentActivities && dashboardMetrics.recentActivities.length > 0 ? (
                     dashboardMetrics.recentActivities.slice(0, 5).map((act) => (
                       <div key={act.id} className="py-2.5 flex items-start space-x-3 text-left">
                         <div className="pt-0.5">
                           {act.type.includes('maintenance') ? (
-                            <div className="w-6 h-6 rounded-lg bg-brand-orange/10 flex items-center justify-center text-brand-orange text-xs font-bold font-display">M</div>
+                            <div className="w-5 h-5 rounded-lg bg-brand-orange/10 flex items-center justify-center text-brand-orange text-[10px] font-bold font-display">M</div>
                           ) : act.type.includes('vehicle') ? (
-                            <div className="w-6 h-6 rounded-lg bg-brand-blue/10 flex items-center justify-center text-brand-blue text-xs font-bold font-display">V</div>
+                            <div className="w-5 h-5 rounded-lg bg-brand-blue/10 flex items-center justify-center text-brand-blue text-[10px] font-bold font-display">V</div>
                           ) : (
-                            <div className="w-6 h-6 rounded-lg bg-brand-green/10 flex items-center justify-center text-brand-green text-xs font-bold font-display">S</div>
+                            <div className="w-5 h-5 rounded-lg bg-brand-green/10 flex items-center justify-center text-brand-green text-[10px] font-bold font-display">S</div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-brand-slate-700 dark:text-brand-slate-300 leading-normal truncate">
+                          <p className="text-[11px] font-medium text-brand-slate-700 dark:text-brand-slate-300 leading-normal truncate">
                             {act.message}
                           </p>
-                          <span className="text-[9px] font-semibold text-brand-slate-400 dark:text-brand-slate-500 block">
+                          <span className="text-[9px] font-semibold text-brand-slate-450 dark:text-brand-slate-500 block mt-0.5">
                             {act.time}
                           </span>
                         </div>
@@ -469,7 +465,7 @@ const Dashboard = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </Card>
             </div>
 
           </div>

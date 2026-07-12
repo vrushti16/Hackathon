@@ -7,7 +7,11 @@ import { Truck, Mail, Lock, ShieldAlert, ArrowRight, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useFleet } from '../context/FleetContext';
 import ThemeToggle from '../components/common/ThemeToggle';
-import Loader from '../components/common/Loader';
+
+// UI components
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import Button from '../components/ui/Button';
 
 // Form validation schema with Zod
 const signupSchema = z.object({
@@ -68,6 +72,12 @@ const Signup = () => {
     }
   };
 
+  const roleOptions = [
+    { value: 'Admin', label: 'Admin' },
+    { value: 'FleetManager', label: 'Fleet Manager' },
+    { value: 'Driver', label: 'Driver' }
+  ];
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 bg-brand-slate-50 dark:bg-brand-slate-950 transition-colors duration-300 relative">
       
@@ -106,138 +116,76 @@ const Signup = () => {
           )}
 
           {/* Name input */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400" htmlFor="name">
-              Full Name
-            </label>
-            <div className="relative">
-              <User className="absolute left-3.5 top-3 w-4 h-4 text-brand-slate-400 dark:text-brand-slate-500 pointer-events-none" />
-              <input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                disabled={loading}
-                {...register('name')}
-                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border bg-white/50 dark:bg-brand-slate-900/50 text-sm text-brand-slate-800 dark:text-white placeholder-brand-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all ${
-                  errors.name ? 'border-brand-red focus:border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800 focus:border-brand-blue'
-                }`}
-              />
-            </div>
-            {errors.name && (
-              <p className="text-[11px] font-bold text-brand-red animate-fade-in">{errors.name.message}</p>
-            )}
-          </div>
+          <Input
+            label="Full Name"
+            id="name"
+            placeholder="John Doe"
+            disabled={loading}
+            icon={User}
+            {...register('name')}
+            error={errors.name?.message}
+          />
 
           {/* Email input */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400" htmlFor="email">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-3 w-4 h-4 text-brand-slate-400 dark:text-brand-slate-500 pointer-events-none" />
-              <input
-                id="email"
-                type="email"
-                placeholder="user@transitops.com"
-                disabled={loading}
-                {...register('email')}
-                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border bg-white/50 dark:bg-brand-slate-900/50 text-sm text-brand-slate-800 dark:text-white placeholder-brand-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all ${
-                  errors.email ? 'border-brand-red focus:border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800 focus:border-brand-blue'
-                }`}
-              />
-            </div>
-            {errors.email && (
-              <p className="text-[11px] font-bold text-brand-red animate-fade-in">{errors.email.message}</p>
-            )}
-          </div>
+          <Input
+            label="Email Address"
+            id="email"
+            type="email"
+            placeholder="user@transitops.com"
+            disabled={loading}
+            icon={Mail}
+            {...register('email')}
+            error={errors.email?.message}
+          />
 
           {/* Role Dropdown */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400" htmlFor="role">
-              Role
-            </label>
-            <div className="relative">
-              <select
-                id="role"
-                disabled={loading}
-                {...register('role')}
-                className={`w-full px-4 py-2.5 rounded-xl border bg-white/50 dark:bg-brand-slate-900/50 text-sm text-brand-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none ${
-                  errors.role ? 'border-brand-red focus:border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800 focus:border-brand-blue'
-                }`}
-              >
-                <option value="Admin">Admin</option>
-                <option value="FleetManager">Fleet Manager</option>
-                <option value="Driver">Driver</option>
-              </select>
-            </div>
-            {errors.role && (
-              <p className="text-[11px] font-bold text-brand-red animate-fade-in">{errors.role.message}</p>
-            )}
-          </div>
+          <Select
+            label="Role"
+            id="role"
+            options={roleOptions}
+            placeholder={null}
+            disabled={loading}
+            {...register('role')}
+            error={errors.role?.message}
+          />
 
           <div className="grid grid-cols-2 gap-3">
             {/* Password input */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400" htmlFor="password">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-3 w-4 h-4 text-brand-slate-400 dark:text-brand-slate-500 pointer-events-none" />
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  disabled={loading}
-                  {...register('password')}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border bg-white/50 dark:bg-brand-slate-900/50 text-sm text-brand-slate-800 dark:text-white placeholder-brand-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all ${
-                    errors.password ? 'border-brand-red focus:border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800 focus:border-brand-blue'
-                  }`}
-                />
-              </div>
-              {errors.password && (
-                <p className="text-[11px] font-bold text-brand-red animate-fade-in">{errors.password.message}</p>
-              )}
-            </div>
+            <Input
+              label="Password"
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              disabled={loading}
+              icon={Lock}
+              {...register('password')}
+              error={errors.password?.message}
+            />
 
             {/* Confirm Password input */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400" htmlFor="confirmPassword">
-                Confirm
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-3 w-4 h-4 text-brand-slate-400 dark:text-brand-slate-500 pointer-events-none" />
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  disabled={loading}
-                  {...register('confirmPassword')}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border bg-white/50 dark:bg-brand-slate-900/50 text-sm text-brand-slate-800 dark:text-white placeholder-brand-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all ${
-                    errors.confirmPassword ? 'border-brand-red focus:border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800 focus:border-brand-blue'
-                  }`}
-                />
-              </div>
-              {errors.confirmPassword && (
-                <p className="text-[11px] font-bold text-brand-red animate-fade-in">{errors.confirmPassword.message}</p>
-              )}
-            </div>
+            <Input
+              label="Confirm"
+              id="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              disabled={loading}
+              icon={Lock}
+              {...register('confirmPassword')}
+              error={errors.confirmPassword?.message}
+            />
           </div>
 
           <div className="pt-2">
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl text-sm font-semibold text-white bg-brand-blue hover:bg-brand-blue-hover focus:outline-none focus:ring-2 focus:ring-brand-blue/40 disabled:opacity-50 transition-all duration-200 shadow-sm shadow-brand-blue/20 cursor-pointer hover:shadow-md hover:scale-[1.01]"
+              loading={loading}
+              variant="primary"
+              fullWidth
+              icon={ArrowRight}
+              className="py-2.5"
             >
-              {loading ? (
-                <Loader size="sm" className="text-white" />
-              ) : (
-                <>
-                  <span>Create Account</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
+              Create Account
+            </Button>
           </div>
         </form>
 
