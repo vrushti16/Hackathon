@@ -18,6 +18,8 @@ const driverRoute = require('./routes/driverRoute');
 const maintenanceRoute = require('./routes/maintenanceRoute');
 const tripRoute = require('./routes/tripRoute');
 const expenseRoute = require('./routes/expenseRoute');
+const dashboardRoute = require('./routes/dashboardRoute');
+const reportRoute = require('./routes/reportRoute');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -31,6 +33,8 @@ app.use('/api/drivers', driverRoute);
 app.use('/api/maintenance', maintenanceRoute);
 app.use('/api/trips', tripRoute);
 app.use('/api/expenses', expenseRoute);
+app.use('/api/dashboard', dashboardRoute);
+app.use('/api/reports', reportRoute);
 
 app.get('/health', (req, res) => {
   res.status(200).json({
