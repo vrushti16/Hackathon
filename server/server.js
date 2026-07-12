@@ -54,14 +54,22 @@ const connectDB = async () => {
       const conn = await mongoose.connect(uri);
       console.log(`MongoDB Memory Server Connected: ${conn.connection.host}`);
 
-      // Seed dummy admin user
+      // Seed dummy admin users
       const User = require('./models/User');
       const bcrypt = require('bcryptjs');
-      const existing = await User.findOne({ email: 'admin@transitops.com' });
-      if (!existing) {
-        const hashedPassword = await bcrypt.hash('password123', 10);
+      
+      const adminExisting = await User.findOne({ email: 'admin@transitops.com' });
+      if (!adminExisting) {
+        const hashedPassword = await bcrypt.hash('admin123', 10);
         await User.create({ name: 'Demo Admin', email: 'admin@transitops.com', password: hashedPassword, role: 'Admin' });
-        console.log('Demo admin user seeded for login.');
+        console.log('Demo admin user admin@transitops.com seeded.');
+      }
+
+      const demoExisting = await User.findOne({ email: 'nandanasn77@gmail.com' });
+      if (!demoExisting) {
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        await User.create({ name: 'Nandana Suresh', email: 'nandanasn77@gmail.com', password: hashedPassword, role: 'Admin' });
+        console.log('Demo user nandanasn77@gmail.com seeded for login.');
       }
     } else {
       const conn = await mongoose.connect(uri);
