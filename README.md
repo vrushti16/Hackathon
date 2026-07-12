@@ -1,4 +1,4 @@
-
+<<<<<<< HEAD
 # 🚚 TransitOps: Smart Transport Operations Platform
 ### *Enterprise Fleet & Logistics Ecosystem • MERN + JWT/RBAC + Nodemailer + Chart.js/Recharts*
 **Documentation Version:** 1.0 (Cumulative Technical Dossier)
@@ -30,14 +30,12 @@ By unifying all aspects of logistics management, TransitOps ensures that dispatc
 
 ## 👥 2. Stakeholders & Functionality Matrix
 
-| Stakeholder | Role | Core Functionalities |
+| Stakeholder | Target Role | Core Functionalities |
 | :--- | :--- | :--- |
-| **Fleet Manager** | The Asset Overseer | Registers and updates vehicles, manages their active lifecycles, assigns maintenance tasks, monitors overall fleet utilization, and reviews vehicle ROI metrics. |
-| **Dispatcher / Driver** | The Operator | Manages the trip lifecycle (drafting, dispatching, and completing trips), assigns available vehicles/drivers, registers fuel purchases, and logs trip-end odometer metrics. |
-| **Safety Officer** | The Compliance Inspector | Manages driver profiles, monitors license category match and expiration dates, updates safety scores, and configures automated email reminders for expiring licenses. |
-| **Financial Analyst** | The Cost Controller | Logs tolls, driver allowances, and repair expenses; reviews fuel consumption costs, operational overhead, and generates CSV/PDF reports for fleet audits. |
-| **System Admin** | The Moderator | Manages secure authentication, assigns user roles (RBAC), and monitors platform health. |
-| **System Services** | Automation & Alerts | Node-cron scheduling triggers daily database status checks and sends license expiration emails to drivers and safety officers. |
+| **Fleet Manager** | Fleet Assets & Maintenance | Oversees fleet assets, vehicle lifecycle, registers/closes maintenance logs, and monitors overall fleet utilization and ROI metrics. |
+| **Driver** | Dispatch & Log Management | Creates trips, assigns vehicles and drivers, monitors active deliveries, records fuel logs, and updates odometer readings. |
+| **Safety Officer** | Compliance & Safety Guard | Ensures driver compliance, tracks license validity and category matches, updates safety scores, and monitors upcoming expirations. |
+| **Financial Analyst** | Expense & Profitability Audit | Reviews operational expenses (tolls, allowances), fuel consumption costs, maintenance overhead, and evaluates vehicle profitability. |
 
 ---
 
@@ -311,7 +309,58 @@ graph LR
 
 ---
 
-## ⚙️ 8. Project Setup & Deployment
+## 🔄 8. Core Operational Workflow Walkthrough
+
+To verify system logic and validation constraints, TransitOps implements the following step-by-step dispatch-to-maintenance lifecycle:
+
+1. **Step 1: Vehicle Registry Initialization**
+   * *Action:* Register a new vehicle with registration number `VAN-05`, maximum capacity of `500 kg`, and status set to `Available`.
+   * *API Call:* `POST /api/vehicles`
+   * *Outcome:* Mongoose validation ensures the plate number is unique. The asset is saved to MongoDB in the `Available` pool.
+
+2. **Step 2: Driver Registration**
+   * *Action:* Register driver `Alex` with a valid driving license category, future expiration date, and status set to `Available`.
+   * *API Call:* `POST /api/drivers`
+   * *Outcome:* Driver profile is created in the `drivers` collection and set to `Available`.
+
+3. **Step 3: Trip Creation**
+   * *Action:* Create a trip dispatch card assigning `VAN-05` and `Alex` with a cargo weight of `450 kg`.
+   * *API Call:* `POST /api/trips`
+   * *Outcome:* Saved as a `Draft` trip in the `trips` collection.
+
+4. **Step 4: Dispatch Verification & Safety Validation**
+   * *Action:* Trigger trip dispatch.
+   * *API Call:* `POST /api/trips/:id/dispatch`
+   * *Business Logic Check:* The system checks that `450 kg` (cargo weight) <= `500 kg` (max capacity), the vehicle status is `Available`, and driver `Alex` holds a valid, non-expired driving license.
+   * *Outcome:* Verification passes and allows dispatch to proceed.
+
+5. **Step 5: Active Trip Lock**
+   * *Action:* Transition state upon successful dispatch.
+   * *Outcome:* Vehicle `VAN-05` and driver `Alex` statuses automatically transition to `On Trip`, blocking them from being assigned to any other trip in the system. The trip status shifts to `Dispatched`.
+
+6. **Step 6: Trip Completion & Metrics Logging**
+   * *Action:* Complete the trip by entering the final odometer value (e.g., `10150 km`) and fuel consumed (e.g., `35 liters`).
+   * *API Call:* `POST /api/trips/:id/complete`
+   * *Outcome:* Calculates actual distance traveled, updates the vehicle's master odometer reading, and records a new entry in `FuelLog`.
+
+7. **Step 7: Asset Release**
+   * *Action:* Complete state transitions.
+   * *Outcome:* Both vehicle `VAN-05` and driver `Alex` statuses are reset back to `Available`, returning them to the active dispatch pool. The trip status updates to `Completed`.
+
+8. **Step 8: Maintenance Lockout Sequence**
+   * *Action:* Create a maintenance record (e.g., "Oil Change") for vehicle `VAN-05`.
+   * *API Call:* `POST /api/maintenance`
+   * *Outcome:* Vehicle status automatically transitions to `In Shop`. The vehicle is immediately hidden from the dispatcher's selection pool.
+
+9. **Step 9: Analytics & ROI Refresh**
+   * *Action:* Query reporting and metrics pipelines.
+   * *API Call:* `GET /api/reports/dashboard` & `GET /api/reports/roi`
+   * *Outcome:* Reports automatically recalculate operational costs, fuel efficiency (`plannedDistance / fuelConsumed`), and vehicle ROI:
+     $$\text{ROI} = \frac{\text{Revenue Generated} - (\text{Maintenance Costs} + \text{Fuel Costs})}{\text{Acquisition Cost}}$$
+
+---
+
+## ⚙️ 9. Project Setup & Deployment
 
 ### Prerequisites
 - Node.js (v18+)
@@ -363,7 +412,7 @@ graph LR
 
 ---
 
-## 🔮 9. Future Roadmap & Goals
+## 🔮 10. Future Roadmap & Goals
 - [ ] **📍 Telematics Integration:** Integrate GPS tracking for active trips on an interactive map.
 - [ ] **🎥 Vehicle Document OCR:** Automatic OCR parser reading driver license images during registration.
 - [ ] **🔔 Push Notifications:** Integrated Socket.io web push indicators alerting dispatcher of load failures or low safety scores.
@@ -371,7 +420,7 @@ graph LR
 
 ---
 
-## 🤝 10. Core Collaborators & Acknowledgements
+## 🤝 11. Core Collaborators & Acknowledgements
 - **Vrushti Patel**
 - **Ruchi Patel**
 - **Tithi Vinodkumar Mistry**
