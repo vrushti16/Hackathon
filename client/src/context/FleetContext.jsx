@@ -78,6 +78,20 @@ export const FleetProvider = ({ children }) => {
     ...v
   });
 
+  const normalizeMaintenance = (item) => ({
+    id: item._id || item.id,
+    vehicleId: item.vehicle?._id || item.vehicleId || item.vehicle,
+    vehicleReg: item.vehicle?.registrationNumber || item.vehicleReg || '',
+    vehicleName: item.vehicle?.modelName || item.vehicleName || '',
+    type: item.type || 'Routine',
+    description: item.description || '',
+    cost: item.cost || 0,
+    startDate: item.startDate ? new Date(item.startDate).toISOString().split('T')[0] : '',
+    endDate: item.endDate ? new Date(item.endDate).toISOString().split('T')[0] : '',
+    status: item.status === 'Active' ? 'Open' : item.status || 'Open',
+    ...item
+  });
+
   // Fetch Vehicles
   const fetchVehicles = useCallback(async () => {
     setLoading(prev => ({ ...prev, vehicles: true }));
@@ -97,7 +111,8 @@ export const FleetProvider = ({ children }) => {
     setLoading(prev => ({ ...prev, maintenance: true }));
     try {
       const response = await api.get('/maintenance');
-      setMaintenance(response.data);
+      const raw = Array.isArray(response.data) ? response.data : (response.data.maintenance || []);
+      setMaintenance(raw.map(normalizeMaintenance));
     } catch (err) {
       triggerToast(err.message || 'Failed to fetch maintenance records', 'danger');
     } finally {
@@ -171,7 +186,7 @@ export const FleetProvider = ({ children }) => {
   const addMaintenance = async (maintenanceData) => {
     try {
       const response = await api.post('/maintenance', maintenanceData);
-      setMaintenance(prev => [...prev, response.data]);
+      setMaintenance(prev => [...prev, normalizeMaintenance(response.data)]);
       triggerToast('Maintenance task created', 'success');
       
       // Since vehicle status changes to "In Shop", reload both sets of states
@@ -189,7 +204,7 @@ export const FleetProvider = ({ children }) => {
   const closeMaintenance = async (id) => {
     try {
       const response = await api.put(`/maintenance/${id}/close`);
-      setMaintenance(prev => prev.map(m => m.id === id ? response.data : m));
+      setMaintenance(prev => prev.map(m => m.id === id ? normalizeMaintenance(response.data) : m));
       triggerToast('Maintenance ticket closed', 'success');
       
       // Refresh vehicle list and dashboard metrics

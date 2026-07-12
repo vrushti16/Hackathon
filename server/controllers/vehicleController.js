@@ -1,6 +1,5 @@
 const Vehicle = require('../models/Vehicle');
-const Expense = require('../models/Expense');
-const Trip = require('../models/Trip');
+const MaintenanceLog = require('../models/MaintenanceLog');
 
 const createVehicle = async (req, res) => {
   try {
@@ -43,23 +42,7 @@ const getAllVehicles = async (req, res) => {
     if (region) filterQuery.region = region;
 
     const vehiclesList = await Vehicle.find(filterQuery);
-    const vehiclesWithMetrics = await Promise.all(vehiclesList.map(async (v) => {
-      const tripsCount = await Trip.countDocuments({ vehicle: v._id });
-      const expenses = await Expense.find({ vehicle: v._id });
-      const operationalCost = expenses.reduce((sum, e) => sum + e.amount, 0);
-      const efficiency = v.type.includes('Electric') || v.modelName.toLowerCase().includes('electric')
-        ? 95.0 
-        : (['Semi-Truck', 'Box-Truck', 'Flatbed'].includes(v.type) ? 6.5 : 12.0);
-
-      return {
-        ...v.toObject(),
-        fuelEfficiency: efficiency,
-        tripsCount,
-        operationalCost
-      };
-    }));
-
-    return res.status(200).json(vehiclesWithMetrics);
+    return res.status(200).json(vehiclesList);
   } catch (error) {
     console.error('Get all vehicles error:', error.message);
     return res.status(500).json({ message: 'Server error while fetching vehicles list.' });
@@ -68,26 +51,11 @@ const getAllVehicles = async (req, res) => {
 
 const getVehicleById = async (req, res) => {
   try {
-    const v = await Vehicle.findById(req.params.id);
-    if (!v) {
+    const vehicle = await Vehicle.findById(req.params.id);
+    if (!vehicle) {
       return res.status(404).json({ message: 'Vehicle not found.' });
     }
-    
-    const tripsCount = await Trip.countDocuments({ vehicle: v._id });
-    const expenses = await Expense.find({ vehicle: v._id });
-    const operationalCost = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const efficiency = v.type.includes('Electric') || v.modelName.toLowerCase().includes('electric')
-      ? 95.0 
-      : (['Semi-Truck', 'Box-Truck', 'Flatbed'].includes(v.type) ? 6.5 : 12.0);
-
-    const vehicleWithMetrics = {
-      ...v.toObject(),
-      fuelEfficiency: efficiency,
-      tripsCount,
-      operationalCost
-    };
-
-    return res.status(200).json(vehicleWithMetrics);
+    return res.status(200).json(vehicle);
   } catch (error) {
     console.error('Get vehicle by ID error:', error.message);
     return res.status(500).json({ message: 'Server error while fetching vehicle details.' });
@@ -132,6 +100,7 @@ const deleteVehicle = async (req, res) => {
       return res.status(404).json({ message: 'Vehicle not found.' });
     }
 
+    await MaintenanceLog.deleteMany({ vehicle: req.params.id });
     await Vehicle.findByIdAndDelete(req.params.id);
     return res.status(200).json({ message: 'Vehicle successfully removed from registry.' });
   } catch (error) {
@@ -140,10 +109,29 @@ const deleteVehicle = async (req, res) => {
   }
 };
 
+const bulkDeleteVehicles = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'A non-empty ids array is required.' });
+    }
+
+    await MaintenanceLog.deleteMany({ vehicle: { $in: ids } });
+    await Vehicle.deleteMany({ _id: { $in: ids } });
+
+    return res.status(200).json({ message: `${ids.length} vehicles successfully removed from registry.` });
+  } catch (error) {
+    console.error('Bulk delete vehicles error:', error.message);
+    return res.status(500).json({ message: 'Server error while deleting vehicles.' });
+  }
+};
+
 module.exports = {
   createVehicle,
   getAllVehicles,
   getVehicleById,
   updateVehicle,
-  deleteVehicle
+  deleteVehicle,
+  bulkDeleteVehicles
 };

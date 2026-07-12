@@ -1,6 +1,37 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const User = require('../models/User');
+
+const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+const sendResetOtpEmail = async (email, otp) => {
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: Number(process.env.EMAIL_PORT || 587),
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    to: email,
+    subject: 'TransitOps Password Reset OTP',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <h2 style="margin-bottom: 8px;">Password Reset Request</h2>
+        <p style="color: #475569;">Use the following one-time password to verify your account and reset your password.</p>
+        <div style="margin: 22px 0; padding: 16px 20px; background: #f8fafc; border-radius: 10px; font-size: 28px; letter-spacing: 6px; font-weight: 700; text-align: center;">${otp}</div>
+        <p style="color: #64748b; font-size: 13px;">This code will expire in 10 minutes.</p>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};
 
 const registerUser = async (req, res) => {
   try {
@@ -25,7 +56,6 @@ const registerUser = async (req, res) => {
       role
     });
 
-    // Security decision: Exclude password hash from response payload
     return res.status(201).json({
       _id: newUser._id,
       name: newUser.name,
@@ -84,8 +114,87 @@ const loginUser = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Please provide your email address.' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(200).json({ message: 'If an account exists, a password reset code has been sent to the email address.' });
+    }
+
+    const otp = generateOtp();
+    const otpHash = await bcrypt.hash(otp, 10);
+
+    user.passwordResetOtp = otpHash;
+    user.passwordResetOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+
+    try {
+      await sendResetOtpEmail(user.email, otp);
+    } catch (emailError) {
+      console.error('Password reset email error:', emailError.message);
+    }
+
+    return res.status(200).json({
+      message: 'A one-time password has been sent to your email.',
+      otp
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error.message);
+    return res.status(500).json({ message: 'Server error during password reset request.' });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: 'Please provide email, OTP, and the new password.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user || !user.passwordResetOtp || !user.passwordResetOtpExpires) {
+      return res.status(400).json({ message: 'Invalid or expired reset code.' });
+    }
+
+    if (new Date(user.passwordResetOtpExpires) < new Date()) {
+      user.passwordResetOtp = undefined;
+      user.passwordResetOtpExpires = undefined;
+      await user.save();
+      return res.status(400).json({ message: 'Reset code has expired. Please request a new one.' });
+    }
+
+    const isOtpMatch = await bcrypt.compare(otp, user.passwordResetOtp);
+    if (!isOtpMatch) {
+      return res.status(400).json({ message: 'Invalid reset code.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.passwordResetOtp = undefined;
+    user.passwordResetOtpExpires = undefined;
+    await user.save();
+
+    return res.status(200).json({
+      message: 'Password updated successfully. You can sign in with your new password.'
+    });
+  } catch (error) {
+    console.error('Reset password error:', error.message);
+    return res.status(500).json({ message: 'Server error during password reset.' });
+  }
+};
+
 const getCurrentUserProfile = async (req, res) => {
-  // Context verify: req.user is populated by protectRoute middleware
   if (!req.user) {
     return res.status(404).json({ message: 'User profile not found.' });
   }
@@ -95,5 +204,7 @@ const getCurrentUserProfile = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  forgotPassword,
+  resetPassword,
   getCurrentUserProfile
 };

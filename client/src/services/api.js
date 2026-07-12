@@ -23,7 +23,7 @@ api.defaults.adapter = async (config) => {
   const url = fullUrl.replace(/^https?:\/\/[^\/]+/, '');
 
   // Hybrid database bypass: completed endpoints connect to the live MongoDB server
-  if (url.includes('/auth') || url.includes('/vehicles') || url.includes('/drivers') || url.includes('/maintenance') || url.includes('/trips') || url.includes('/expenses') || url.includes('/dashboard') || url.includes('/reports')) {
+  if (url.includes('/auth') || url.includes('/vehicles') || url.includes('/drivers') || url.includes('/maintenance') || url.includes('/trips') || url.includes('/expenses')) {
     const passConfig = { ...config, adapter: undefined };
     return axios(passConfig);
   }
@@ -55,6 +55,7 @@ api.defaults.adapter = async (config) => {
       };
     }
     
+<<<<<<< HEAD
     // Validate dummy token format
     if (!token.startsWith('mock_access_token_')) {
       // Allow real backend JWT tokens to pass validation in the mock adapter
@@ -74,6 +75,34 @@ api.defaults.adapter = async (config) => {
         config,
         data: { message: 'User not found' }
       };
+=======
+    // Validate token format (allow both mock tokens and real JWTs)
+    let userId = null;
+    if (token.startsWith('mock_access_token_')) {
+      userId = token.replace('mock_access_token_', '');
+    } else {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          userId = payload.id;
+        }
+      } catch (e) {
+        // Ignore parsing errors, fallback will handle it
+      }
+    }
+
+    const users = mockDb.getUsers();
+    currentUser = users.find(u => u.id === userId);
+    if (!currentUser) {
+      const savedUser = JSON.parse(localStorage.getItem('transitops_user') || 'null');
+      if (savedUser) {
+        currentUser = users.find(u => u.email?.toLowerCase() === savedUser.email?.toLowerCase());
+      }
+      if (!currentUser) {
+        currentUser = users[0];
+      }
+>>>>>>> 00a2b85bc5ed88a89c564b49addd190ca2a78dc1
     }
   }
 

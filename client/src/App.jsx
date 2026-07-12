@@ -9,6 +9,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 
 // Pages
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Vehicles from './pages/Vehicles';
@@ -30,19 +31,18 @@ function App() {
               {/* Public Authentication Route */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
 
               {/* Authenticated Dashboard Core */}
-              <Route 
-                path="/" 
+              <Route
+                path="/"
                 element={
                   <ProtectedRoute>
                     <DashboardLayout />
                   </ProtectedRoute>
                 }
               >
-                {/* Redirect default root path to dashboard */}
                 <Route index element={<Navigate to="/dashboard" replace />} />
-                
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="vehicles" element={<Vehicles />} />
                 <Route path="maintenance" element={<Maintenance />} />
