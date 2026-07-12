@@ -110,4 +110,52 @@ export const TableSkeleton = ({ rows = 5, cols = 5 }) => {
     </div>
   );
 };
+
+// Profile Loading Skeleton
+export const ProfileSkeleton = () => {
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="glass-panel p-8 rounded-2xl flex flex-col md:flex-row items-center md:items-start gap-8">
+        <SkeletonCircle size="w-32 h-32" className="border-4 border-white dark:border-brand-slate-900" />
+        <div className="space-y-4 text-center md:text-left flex-1 w-full">
+          <SkeletonRect width="w-48 mx-auto md:mx-0" height="h-8" />
+          <SkeletonRect width="w-32 mx-auto md:mx-0" height="h-4" />
+          <div className="flex flex-wrap gap-3 justify-center md:justify-start pt-2">
+            <SkeletonRect width="w-24" height="h-6" className="rounded-full" />
+            <SkeletonRect width="w-24" height="h-6" className="rounded-full" />
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FormSkeleton fields={4} />
+        <FormSkeleton fields={3} />
+      </div>
+    </div>
+  );
+};
+
+// Form Loading Skeleton
+export const FormSkeleton = ({ fields = 4, title = true }) => {
+  return (
+    <div className="glass-panel p-6 rounded-2xl space-y-6">
+      {title && (
+        <div className="pb-4 border-b border-brand-slate-100 dark:border-brand-slate-900">
+          <SkeletonRect width="w-40" height="h-6" />
+        </div>
+      )}
+      <div className="space-y-5">
+        {Array.from({ length: fields }).map((_, i) => (
+          <div key={`form-field-${i}`} className="space-y-2">
+            <SkeletonRect width="w-24" height="h-3" />
+            <SkeletonRect width="w-full" height="h-11" className="rounded-xl" />
+          </div>
+        ))}
+      </div>
+      <div className="pt-4 flex justify-end">
+        <SkeletonRect width="w-32" height="h-11" className="rounded-xl" />
+      </div>
+    </div>
+  );
+};
+
 export default SkeletonRect;
