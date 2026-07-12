@@ -180,19 +180,39 @@ const TripManagementPage = React.memo(() => {
     { key: 'cargoWeight', header: 'Cargo', render: (value) => `${value} kg` },
     { key: 'distance', header: 'Distance', render: (value) => `${value} km` },
     { key: 'status', header: 'Status', render: (value) => <StatusBadge status={value} /> },
-    { key: 'actions', header: 'Dispatch', render: (_, row) => (
-      <div className="flex flex-wrap gap-2">
-        <Button onClick={() => handleDispatchTrip(row.id)} variant="primary" size="sm" disabled={row.status === 'Dispatched' || row.status === 'Completed' || row.status === 'Cancelled'}>
-          Dispatch
-        </Button>
-        <Button onClick={() => handleCompleteTrip(row)} variant="outline" size="sm" className="text-brand-green hover:bg-brand-green/5 border-brand-green/10" disabled={row.status === 'Completed' || row.status === 'Cancelled' || row.status === 'Draft'}>
-          Complete
-        </Button>
-        <Button onClick={() => handleCancelClick(row.id)} variant="outline" size="sm" className="text-brand-red hover:bg-brand-red/5 border-brand-red/10" disabled={row.status === 'Completed' || row.status === 'Cancelled'}>
-          Cancel
-        </Button>
-      </div>
-    ) }
+    { key: 'actions', header: 'Dispatch', render: (_, row) => {
+      const statusLower = row.status?.toLowerCase();
+      return (
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            onClick={() => handleDispatchTrip(row.id)} 
+            variant="primary" 
+            size="sm" 
+            disabled={statusLower === 'dispatched' || statusLower === 'completed' || statusLower === 'cancelled'}
+          >
+            Dispatch
+          </Button>
+          <Button 
+            onClick={() => handleCompleteTrip(row)} 
+            variant="outline" 
+            size="sm" 
+            className="text-brand-green hover:bg-brand-green/5 border-brand-green/10" 
+            disabled={statusLower === 'completed' || statusLower === 'cancelled' || statusLower === 'draft'}
+          >
+            Complete
+          </Button>
+          <Button 
+            onClick={() => handleCancelClick(row.id)} 
+            variant="outline" 
+            size="sm" 
+            className="text-brand-red hover:bg-brand-red/5 border-brand-red/10" 
+            disabled={statusLower === 'completed' || statusLower === 'cancelled'}
+          >
+            Cancel
+          </Button>
+        </div>
+      );
+    } }
   ];
 
   return (
