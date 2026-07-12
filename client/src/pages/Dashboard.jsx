@@ -42,6 +42,7 @@ import Card from '../components/ui/Card';
 import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
 import { ChartSkeleton } from '../components/common/Skeleton';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 const Dashboard = React.memo(() => {
   const { user } = useAuth();
@@ -438,78 +439,82 @@ const Dashboard = React.memo(() => {
             
             {/* Chart 1: Trips per Day */}
             <div className="lg:col-span-2">
-              {loading.dashboard || !chartsData ? (
-                <ChartSkeleton />
-              ) : (
-                <Card 
-                  title="Trips per Day"
-                  subtitle="Trip frequencies over the last 7 days"
-                >
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartsData.tripsPerDay} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="colorTrips" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-brand-slate-900" />
-                        <XAxis dataKey="name" stroke="#64748B" fontSize={10} tickLine={false} />
-                        <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Area type="monotone" dataKey="trips" stroke="#2563EB" strokeWidth={2} fillOpacity={1} fill="url(#colorTrips)" name="Completed Trips" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </Card>
-              )}
+              <ErrorBoundary fallbackMessage="Unable to load trip frequency trends." onRetry={fetchDashboardMetrics}>
+                {loading.dashboard || !chartsData ? (
+                  <ChartSkeleton />
+                ) : (
+                  <Card 
+                    title="Trips per Day"
+                    subtitle="Trip frequencies over the last 7 days"
+                  >
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartsData.tripsPerDay} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorTrips" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-brand-slate-900" />
+                          <XAxis dataKey="name" stroke="#64748B" fontSize={10} tickLine={false} />
+                          <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Area type="monotone" dataKey="trips" stroke="#2563EB" strokeWidth={2} fillOpacity={1} fill="url(#colorTrips)" name="Completed Trips" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+                )}
+              </ErrorBoundary>
             </div>
 
             {/* Chart 2: Vehicle Status Distribution */}
             <div>
-              {loading.vehicles || loading.dashboard || !chartsData ? (
-                <ChartSkeleton />
-              ) : (
-                <Card
-                  title="Vehicle Allocation"
-                  subtitle="Current status distributions"
-                  className="flex flex-col justify-between h-full"
-                >
-                  <div className="h-48 relative flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={chartsData.vehicleStatusPie}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={55}
-                          outerRadius={70}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {chartsData.vehicleStatusPie.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="absolute text-center">
-                      <p className="text-2xl font-bold font-display text-brand-slate-800 dark:text-white">{metrics.total}</p>
-                      <p className="text-[8px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Vehicles</p>
-                    </div>
-                  </div>
-                  <div className="flex justify-center gap-4 text-[10px] font-bold mt-2">
-                    {chartsData.vehicleStatusPie.map(item => (
-                      <div key={item.name} className="flex items-center space-x-1.5">
-                        <span className="w-2 rounded-full h-2" style={{ backgroundColor: item.color }} />
-                        <span className="text-brand-slate-500 dark:text-brand-slate-400">{item.name} ({item.value})</span>
+              <ErrorBoundary fallbackMessage="Unable to load vehicle status distribution." onRetry={fetchDashboardMetrics}>
+                {loading.vehicles || loading.dashboard || !chartsData ? (
+                  <ChartSkeleton />
+                ) : (
+                  <Card
+                    title="Vehicle Allocation"
+                    subtitle="Current status distributions"
+                    className="flex flex-col justify-between h-full"
+                  >
+                    <div className="h-48 relative flex items-center justify-center">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={chartsData.vehicleStatusPie}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={55}
+                            outerRadius={70}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {chartsData.vehicleStatusPie.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<CustomTooltip />} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute text-center">
+                        <p className="text-2xl font-bold font-display text-brand-slate-800 dark:text-white">{metrics.total}</p>
+                        <p className="text-[8px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Vehicles</p>
                       </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
+                    </div>
+                    <div className="flex justify-center gap-4 text-[10px] font-bold mt-2">
+                      {chartsData.vehicleStatusPie.map(item => (
+                        <div key={item.name} className="flex items-center space-x-1.5">
+                          <span className="w-2 rounded-full h-2" style={{ backgroundColor: item.color }} />
+                          <span className="text-brand-slate-500 dark:text-brand-slate-400">{item.name} ({item.value})</span>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+              </ErrorBoundary>
             </div>
 
           </div>
@@ -518,71 +523,75 @@ const Dashboard = React.memo(() => {
             
             {/* Chart 3: Maintenance Trend */}
             <div className="lg:col-span-2">
-              {loading.dashboard || !chartsData ? (
-                <ChartSkeleton />
-              ) : (
-                <Card
-                  title="Maintenance Costs"
-                  subtitle="Monthly repair & inspection costs in USD"
-                >
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartsData.maintenanceTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-brand-slate-900" />
-                        <XAxis dataKey="name" stroke="#64748B" fontSize={10} tickLine={false} />
-                        <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="cost" fill="#F97316" radius={[4, 4, 0, 0]} name="Repair Cost ($)" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </Card>
-              )}
+              <ErrorBoundary fallbackMessage="Unable to load maintenance costs." onRetry={fetchDashboardMetrics}>
+                {loading.dashboard || !chartsData ? (
+                  <ChartSkeleton />
+                ) : (
+                  <Card
+                    title="Maintenance Costs"
+                    subtitle="Monthly repair & inspection costs in USD"
+                  >
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={chartsData.maintenanceTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-brand-slate-900" />
+                          <XAxis dataKey="name" stroke="#64748B" fontSize={10} tickLine={false} />
+                          <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Bar dataKey="cost" fill="#F97316" radius={[4, 4, 0, 0]} name="Repair Cost ($)" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+                )}
+              </ErrorBoundary>
             </div>
 
             {/* Recent Activities Panel */}
             <div className="flex flex-col">
-              <Card
-                title="Live Fleet Activities"
-                subtitle="Realtime operations journal"
-                className="flex-1 flex flex-col justify-between max-h-96"
-                action={
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-green opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-green"></span>
-                  </span>
-                }
-              >
-                <div className="divide-y divide-brand-slate-100 dark:divide-brand-slate-900 overflow-y-auto flex-1 pr-1 space-y-1 scrollbar">
-                  {dashboardMetrics?.recentActivities && dashboardMetrics.recentActivities.length > 0 ? (
-                    dashboardMetrics.recentActivities.slice(0, 5).map((act) => (
-                      <div key={act.id} className="py-2.5 flex items-start space-x-3 text-left">
-                        <div className="pt-0.5">
-                          {act.type.includes('maintenance') ? (
-                            <div className="w-5 h-5 rounded-lg bg-brand-orange/10 flex items-center justify-center text-brand-orange text-[10px] font-bold font-display">M</div>
-                          ) : act.type.includes('vehicle') ? (
-                            <div className="w-5 h-5 rounded-lg bg-brand-blue/10 flex items-center justify-center text-brand-blue text-[10px] font-bold font-display">V</div>
-                          ) : (
-                            <div className="w-5 h-5 rounded-lg bg-brand-green/10 flex items-center justify-center text-brand-green text-[10px] font-bold font-display">S</div>
-                          )}
+              <ErrorBoundary fallbackMessage="Unable to load activities." onRetry={fetchDashboardMetrics}>
+                <Card
+                  title="Live Fleet Activities"
+                  subtitle="Realtime operations journal"
+                  className="flex-1 flex flex-col justify-between max-h-96"
+                  action={
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-green opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-green"></span>
+                    </span>
+                  }
+                >
+                  <div className="divide-y divide-brand-slate-100 dark:divide-brand-slate-900 overflow-y-auto flex-1 pr-1 space-y-1 scrollbar">
+                    {dashboardMetrics?.recentActivities && dashboardMetrics.recentActivities.length > 0 ? (
+                      dashboardMetrics.recentActivities.slice(0, 5).map((act) => (
+                        <div key={act.id} className="py-2.5 flex items-start space-x-3 text-left">
+                          <div className="pt-0.5">
+                            {act.type.includes('maintenance') ? (
+                              <div className="w-5 h-5 rounded-lg bg-brand-orange/10 flex items-center justify-center text-brand-orange text-[10px] font-bold font-display">M</div>
+                            ) : act.type.includes('vehicle') ? (
+                              <div className="w-5 h-5 rounded-lg bg-brand-blue/10 flex items-center justify-center text-brand-blue text-[10px] font-bold font-display">V</div>
+                            ) : (
+                              <div className="w-5 h-5 rounded-lg bg-brand-green/10 flex items-center justify-center text-brand-green text-[10px] font-bold font-display">S</div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-medium text-brand-slate-700 dark:text-brand-slate-300 leading-normal truncate">
+                              {act.message}
+                            </p>
+                            <span className="text-[9px] font-semibold text-brand-slate-450 dark:text-brand-slate-500 block mt-0.5">
+                              {act.time}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[11px] font-medium text-brand-slate-700 dark:text-brand-slate-300 leading-normal truncate">
-                            {act.message}
-                          </p>
-                          <span className="text-[9px] font-semibold text-brand-slate-450 dark:text-brand-slate-500 block mt-0.5">
-                            {act.time}
-                          </span>
-                        </div>
+                      ))
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-xs text-brand-slate-400 dark:text-brand-slate-500">
+                        No operational logs found
                       </div>
-                    ))
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-xs text-brand-slate-400 dark:text-brand-slate-500">
-                      No operational logs found
-                    </div>
-                  )}
-                </div>
-              </Card>
+                    )}
+                  </div>
+                </Card>
+              </ErrorBoundary>
             </div>
 
           </div>

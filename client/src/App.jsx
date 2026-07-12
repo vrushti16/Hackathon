@@ -27,6 +27,7 @@ const TripManagementPage = lazy(() => import('./pages/operations/TripManagementP
 const FuelPage = lazy(() => import('./pages/operations/FuelPage'));
 const ExpensePage = lazy(() => import('./pages/operations/ExpensePage'));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
+const Profile = lazy(() => import('./pages/Profile'));
 
 // Fallback loader for Suspense
 const PageLoader = () => (
@@ -62,7 +63,7 @@ function App() {
                     >
                       {/* Redirect default root path to dashboard */}
                       <Route index element={<Navigate to="/dashboard" replace />} />
-                      
+
                       <Route path="dashboard" element={<Dashboard />} />
                       <Route path="vehicles" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.FLEET_MANAGER]}><Vehicles /></ProtectedRoute>} />
                       <Route path="maintenance" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.FLEET_MANAGER]}><Maintenance /></ProtectedRoute>} />
@@ -73,6 +74,7 @@ function App() {
                       <Route path="fuel" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.FLEET_MANAGER, ROLES.DRIVER]}><FuelPage /></ProtectedRoute>} />
                       <Route path="expenses" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.FINANCIAL_ANALYST]}><ExpensePage /></ProtectedRoute>} />
                       <Route path="users" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><UserManagement /></ProtectedRoute>} />
+                      <Route path="profile" element={<Profile />} />
                     </Route>
 
                     {/* Catch-all fallback 404 */}

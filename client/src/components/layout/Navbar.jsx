@@ -109,6 +109,18 @@ const Navbar = ({ onOpenSidebar }) => {
                 <p className="text-[10px] text-brand-slate-400 dark:text-brand-slate-500 truncate">{user?.email}</p>
               </div>
               <a 
+                href="/profile"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setProfileOpen(false);
+                  window.location.pathname = '/profile';
+                }}
+                className="flex items-center space-x-2.5 px-4 py-2 text-xs font-semibold text-brand-slate-600 dark:text-brand-slate-400 hover:text-brand-slate-800 dark:hover:text-white hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900 transition-colors"
+              >
+                <User className="w-4 h-4 text-brand-slate-400" />
+                <span>My Profile</span>
+              </a>
+              <a 
                 href="/settings"
                 onClick={(e) => {
                   e.preventDefault();
