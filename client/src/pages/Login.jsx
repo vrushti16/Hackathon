@@ -189,7 +189,16 @@ const Login = () => {
         <div className="p-3 bg-brand-slate-100/70 dark:bg-brand-slate-900/40 border border-brand-slate-200/50 dark:border-brand-slate-800/50 rounded-xl text-center">
           <p className="text-[10px] font-medium text-brand-slate-500 dark:text-brand-slate-400">
             Demo login details: <br />
-            Email: <span className="font-bold text-brand-slate-700 dark:text-white">nandanasn77@gmail.com</span> | Password: <span className="font-bold text-brand-slate-700 dark:text-white">admin123</span>
+            Email: <span className="font-bold text-brand-slate-700 dark:text-white">admin@transitops.com</span> | Password: <span className="font-bold text-brand-slate-700 dark:text-white">password123</span>
+          </p>
+        </div>
+
+        <div className="pt-2 text-center">
+          <p className="text-xs font-semibold text-brand-slate-500 dark:text-brand-slate-400">
+            Don't have an account?{' '}
+            <Link to="/signup" className="text-brand-blue hover:underline">
+              Sign Up
+            </Link>
           </p>
         </div>
       </div>

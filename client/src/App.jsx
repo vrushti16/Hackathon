@@ -10,6 +10,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 // Pages
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
+import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Vehicles from './pages/Vehicles';
 import Maintenance from './pages/Maintenance';
@@ -29,6 +30,7 @@ function App() {
             <Routes>
               {/* Public Authentication Route */}
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
 
               {/* Root redirect */}

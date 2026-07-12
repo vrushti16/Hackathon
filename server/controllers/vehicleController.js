@@ -1,4 +1,6 @@
 const Vehicle = require('../models/Vehicle');
+const Expense = require('../models/Expense');
+const Trip = require('../models/Trip');
 
 const createVehicle = async (req, res) => {
   try {
@@ -41,7 +43,23 @@ const getAllVehicles = async (req, res) => {
     if (region) filterQuery.region = region;
 
     const vehiclesList = await Vehicle.find(filterQuery);
-    return res.status(200).json(vehiclesList);
+    const vehiclesWithMetrics = await Promise.all(vehiclesList.map(async (v) => {
+      const tripsCount = await Trip.countDocuments({ vehicle: v._id });
+      const expenses = await Expense.find({ vehicle: v._id });
+      const operationalCost = expenses.reduce((sum, e) => sum + e.amount, 0);
+      const efficiency = v.type.includes('Electric') || v.modelName.toLowerCase().includes('electric')
+        ? 95.0 
+        : (['Semi-Truck', 'Box-Truck', 'Flatbed'].includes(v.type) ? 6.5 : 12.0);
+
+      return {
+        ...v.toObject(),
+        fuelEfficiency: efficiency,
+        tripsCount,
+        operationalCost
+      };
+    }));
+
+    return res.status(200).json(vehiclesWithMetrics);
   } catch (error) {
     console.error('Get all vehicles error:', error.message);
     return res.status(500).json({ message: 'Server error while fetching vehicles list.' });
@@ -50,11 +68,26 @@ const getAllVehicles = async (req, res) => {
 
 const getVehicleById = async (req, res) => {
   try {
-    const vehicle = await Vehicle.findById(req.params.id);
-    if (!vehicle) {
+    const v = await Vehicle.findById(req.params.id);
+    if (!v) {
       return res.status(404).json({ message: 'Vehicle not found.' });
     }
-    return res.status(200).json(vehicle);
+    
+    const tripsCount = await Trip.countDocuments({ vehicle: v._id });
+    const expenses = await Expense.find({ vehicle: v._id });
+    const operationalCost = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const efficiency = v.type.includes('Electric') || v.modelName.toLowerCase().includes('electric')
+      ? 95.0 
+      : (['Semi-Truck', 'Box-Truck', 'Flatbed'].includes(v.type) ? 6.5 : 12.0);
+
+    const vehicleWithMetrics = {
+      ...v.toObject(),
+      fuelEfficiency: efficiency,
+      tripsCount,
+      operationalCost
+    };
+
+    return res.status(200).json(vehicleWithMetrics);
   } catch (error) {
     console.error('Get vehicle by ID error:', error.message);
     return res.status(500).json({ message: 'Server error while fetching vehicle details.' });

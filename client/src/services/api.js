@@ -23,7 +23,7 @@ api.defaults.adapter = async (config) => {
   const url = fullUrl.replace(/^https?:\/\/[^\/]+/, '');
 
   // Hybrid database bypass: completed endpoints connect to the live MongoDB server
-  if (url.includes('/auth') || url.includes('/vehicles') || url.includes('/drivers') || url.includes('/maintenance') || url.includes('/expenses')) {
+  if (url.includes('/auth') || url.includes('/vehicles') || url.includes('/drivers') || url.includes('/maintenance') || url.includes('/expenses') || url.includes('/dashboard') || url.includes('/reports')) {
     const passConfig = { ...config, adapter: undefined };
     return axios(passConfig);
   }
