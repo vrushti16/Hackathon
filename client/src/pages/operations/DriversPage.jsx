@@ -345,12 +345,12 @@ const DriversPage = React.memo(() => {
               defaultValue={selectedDriver?.licenseNumber || ''} 
               required 
             />
-            <Input 
+            <Select 
               label="Category" 
               id="category"
               name="category" 
-              defaultValue={selectedDriver?.category || ''} 
-              placeholder="e.g. Class A, Class B"
+              defaultValue={selectedDriver?.category || 'Class A CDL'} 
+              options={['Class A CDL', 'Class B CDL', 'Standard']}
               required 
             />
             <Input 

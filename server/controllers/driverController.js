@@ -4,7 +4,7 @@ const Trip = require('../models/Trip');
 
 const createDriver = async (req, res) => {
   try {
-    const { name, licenseNumber, licenseCategory, licenseExpiryDate, contactNumber, user: userId } = req.body;
+    const { name, licenseNumber, licenseCategory, licenseExpiryDate, contactNumber, user: userId, email, safetyScore, status } = req.body;
 
     if (!name || !licenseNumber || !licenseCategory || !licenseExpiryDate || !contactNumber) {
       return res.status(400).json({ message: 'Please provide name, licenseNumber, licenseCategory, licenseExpiryDate, and contactNumber.' });
@@ -38,8 +38,9 @@ const createDriver = async (req, res) => {
       licenseExpiryDate,
       contactNumber,
       user: linkedUser,
-      safetyScore: 100,
-      status: 'Available'
+      email,
+      safetyScore: safetyScore !== undefined ? Number(safetyScore) : 100,
+      status: status || 'Available'
     });
 
     return res.status(201).json(driver);
