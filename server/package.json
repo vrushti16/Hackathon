@@ -7,7 +7,8 @@
     "start": "node server.js",
     "server": "nodemon server.js",
     "dev": "nodemon server.js",
-    "seed:users": "node scripts/seedUsers.js"
+    "seed:users": "node scripts/seedUsers.js",
+    "seed:india": "node scripts/seedIndiaData.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
