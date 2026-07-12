@@ -4,6 +4,7 @@ import { Menu, Bell, Search, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useFleet } from '../../context/FleetContext';
 import ThemeToggle from '../common/ThemeToggle';
+import NotificationBell from '../notifications/NotificationBell';
 
 const Navbar = ({ onOpenSidebar }) => {
   const { user, logout } = useAuth();
@@ -72,56 +73,7 @@ const Navbar = ({ onOpenSidebar }) => {
         <ThemeToggle />
 
         {/* Notifications Panel */}
-        <div className="relative" ref={notificationsRef}>
-          <button
-            onClick={() => {
-              setNotificationsOpen(!notificationsOpen);
-              setProfileOpen(false);
-            }}
-            type="button"
-            className="p-2.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 text-brand-slate-500 dark:text-brand-slate-400 hover:text-brand-blue dark:hover:text-brand-blue hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900 transition-all duration-200 relative cursor-pointer"
-          >
-            <Bell className="w-5 h-5" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-orange opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-orange"></span>
-              </span>
-            )}
-          </button>
-
-          {/* Notifications Dropdown */}
-          {notificationsOpen && (
-            <div className="absolute right-0 mt-2.5 w-80 glass-modal border border-brand-slate-200 dark:border-brand-slate-800 rounded-xl shadow-xl overflow-hidden py-1 animate-scale-in z-40">
-              <div className="px-4 py-3 border-b border-brand-slate-100 dark:border-brand-slate-900 flex justify-between items-center bg-brand-slate-50/50 dark:bg-brand-slate-950/20">
-                <span className="text-xs font-bold text-brand-slate-700 dark:text-white">Recent Activities</span>
-                {unreadCount > 0 && (
-                  <span className="text-[10px] font-bold text-brand-orange px-1.5 py-0.5 bg-brand-orange/10 rounded-md">
-                    {unreadCount} new
-                  </span>
-                )}
-              </div>
-              <div className="divide-y divide-brand-slate-100 dark:divide-brand-slate-900 max-h-64 overflow-y-auto">
-                {activities.length > 0 ? (
-                  activities.map((act) => (
-                    <div key={act.id} className="p-3.5 hover:bg-brand-slate-50/50 dark:hover:bg-brand-slate-900/30 transition-colors text-left">
-                      <p className="text-xs text-brand-slate-600 dark:text-brand-slate-350 leading-relaxed font-medium">
-                        {act.message}
-                      </p>
-                      <span className="text-[9px] font-semibold text-brand-slate-400 dark:text-brand-slate-500 block mt-1">
-                        {act.time}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-6 text-center text-xs text-brand-slate-400 dark:text-brand-slate-500">
-                    No recent activities
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+        <NotificationBell />
 
         {/* User Profile Dropper */}
         <div className="relative" ref={profileRef}>

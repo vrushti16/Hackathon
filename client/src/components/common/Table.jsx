@@ -74,7 +74,7 @@ const Table = ({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-brand-slate-100 dark:divide-brand-slate-900">
+        <tbody className="divide-y divide-brand-slate-100 dark:divide-brand-slate-900 animate-fade-in">
           {data.map((row, index) => {
             const isSelected = selectedIds.includes(row.id);
             return (

@@ -13,7 +13,7 @@ const Card = ({
   ...props
 }) => {
   return (
-    <div className={`glass-panel p-6 rounded-xl hover:-translate-y-0.5 transition-all duration-200 group ${className}`} {...props}>
+    <div className={`glass-panel p-6 rounded-xl transition-card group ${className}`} {...props}>
       {(title || subtitle || Icon || action) && (
         <div className="flex items-start justify-between mb-4 gap-4">
           <div className="space-y-0.5">
