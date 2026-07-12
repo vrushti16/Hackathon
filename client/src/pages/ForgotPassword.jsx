@@ -40,7 +40,7 @@ const ForgotPassword = () => {
           ? `A one-time password was generated for ${trimmedEmail}. Check your inbox or the server response for the code.`
           : `A one-time password has been sent to ${trimmedEmail}.`
       );
-      setStep('reset');
+      setStep('verify');
       triggerToast(otpValue ? 'OTP ready for use' : 'OTP sent to your email', 'warning');
     } catch (err) {
       const message = err.response?.data?.message || 'Unable to send reset code right now.';
@@ -51,19 +51,39 @@ const ForgotPassword = () => {
     }
   };
 
-  const handleResetPassword = async (e) => {
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
     const trimmedEmail = email.trim();
-
-    if (!trimmedEmail) {
-      setErrorMessage('Please enter your email address.');
-      return;
-    }
 
     if (!otp.trim() || otp.trim().length !== 6) {
       setErrorMessage('Enter the 6-digit OTP you received in your email.');
       return;
     }
+
+    setLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      await api.post('/auth/verify-otp', {
+        email: trimmedEmail.toLowerCase(),
+        otp: otp.trim()
+      });
+      setSuccessMessage('OTP verified successfully! Now please create your new password.');
+      setStep('reset');
+      triggerToast('OTP verified successfully', 'success');
+    } catch (err) {
+      const message = err.response?.data?.message || 'Invalid or expired OTP code.';
+      setErrorMessage(message);
+      triggerToast(message, 'danger');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    const trimmedEmail = email.trim();
 
     if (!newPassword || newPassword.length < 6) {
       setErrorMessage('New password must be at least 6 characters long.');
@@ -91,6 +111,9 @@ const ForgotPassword = () => {
       setConfirmPassword('');
       setSuccessMessage(response.data.message || 'Password updated successfully.');
       triggerToast('Password updated successfully', 'success');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (err) {
       const message = err.response?.data?.message || 'Unable to reset your password right now.';
       setErrorMessage(message);
@@ -132,7 +155,7 @@ const ForgotPassword = () => {
           </div>
         )}
 
-        {step === 'request' ? (
+        {step === 'request' && (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400" htmlFor="email">
@@ -166,8 +189,10 @@ const ForgotPassword = () => {
               )}
             </button>
           </form>
-        ) : (
-          <form onSubmit={handleResetPassword} className="space-y-4">
+        )}
+
+        {step === 'verify' && (
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400" htmlFor="otp">
                 OTP Code
@@ -183,6 +208,35 @@ const ForgotPassword = () => {
               />
             </div>
 
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('request');
+                  setErrorMessage('');
+                  setSuccessMessage('');
+                }}
+                className="text-sm font-semibold text-brand-slate-500 hover:text-brand-blue"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-brand-blue hover:bg-brand-blue-hover disabled:opacity-50 transition-all duration-200"
+              >
+                {loading ? (
+                  <Loader size="sm" className="text-white" />
+                ) : (
+                  <span>Verify OTP</span>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === 'reset' && (
+          <form onSubmit={handleResetPassword} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400" htmlFor="newPassword">
                 New Password
@@ -221,7 +275,7 @@ const ForgotPassword = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setStep('request');
+                  setStep('verify');
                   setErrorMessage('');
                   setSuccessMessage('');
                 }}

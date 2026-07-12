@@ -167,6 +167,38 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Please provide email and OTP.' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user || !user.passwordResetOtp || !user.passwordResetOtpExpires) {
+      return res.status(400).json({ message: 'Invalid or expired reset code.' });
+    }
+
+    if (new Date(user.passwordResetOtpExpires) < new Date()) {
+      return res.status(400).json({ message: 'Reset code has expired. Please request a new one.' });
+    }
+
+    const isOtpMatch = await bcrypt.compare(otp, user.passwordResetOtp);
+    if (!isOtpMatch) {
+      return res.status(400).json({ message: 'Invalid reset code.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP verified successfully.'
+    });
+  } catch (error) {
+    console.error('Verify OTP error:', error.message);
+    return res.status(500).json({ message: 'Server error during OTP verification.' });
+  }
+};
+
 const resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -222,6 +254,7 @@ module.exports = {
   registerUser,
   loginUser,
   forgotPassword,
+  verifyOtp,
   resetPassword,
   getCurrentUserProfile
 };
