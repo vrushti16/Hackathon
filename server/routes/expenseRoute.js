@@ -29,8 +29,8 @@ router.delete('/fuel/:id', protectRoute, authorizeRoles('Admin'), deleteFuelLog)
 
 // ─── EXPENSE ROUTES ─────────────────────────────────────────────────
 
-// POST   /api/expenses               — Log a direct expense (FinancialAnalyst / Admin)
-router.post('/', protectRoute, authorizeRoles('FinancialAnalyst', 'Admin'), createExpense);
+// POST   /api/expenses               — Log a direct expense (Financial Analyst / Admin)
+router.post('/', protectRoute, authorizeRoles('Financial Analyst', 'Admin'), createExpense);
 
 // GET    /api/expenses               — List all expenses (any authenticated user)
 router.get('/', protectRoute, getExpenses);

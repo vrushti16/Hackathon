@@ -34,8 +34,10 @@ import KpiCard from '../components/common/KpiCard';
 import StatusBadge from '../components/common/StatusBadge';
 import { ChartSkeleton } from '../components/common/Skeleton';
 import EmptyState from '../components/common/EmptyState';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const { 
     vehicles, 
     maintenance,
@@ -158,6 +160,119 @@ const Dashboard = () => {
     }
     return null;
   };
+
+  if (user?.role === 'Driver') {
+    return (
+      <div className="space-y-6">
+        <div className="p-6 rounded-2xl glass-panel text-left space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-blue">Driver Dashboard</p>
+              <h1 className="text-2xl font-bold text-brand-slate-900 dark:text-white font-display">Welcome, {user.name}</h1>
+            </div>
+            <div className="px-3.5 py-1.5 rounded-xl bg-brand-green/10 text-brand-green text-xs font-bold uppercase tracking-wider">
+              License Status: Valid
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
+              <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Safety Score</span>
+              <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">98/100</p>
+            </div>
+            <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
+              <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">License Category</span>
+              <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">Class A CDL</p>
+            </div>
+            <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
+              <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Expiry Date</span>
+              <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">2027-12-15</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left">
+          <div className="glass-panel p-6 rounded-xl space-y-4">
+            <h3 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">My Assigned Trips</h3>
+            <div className="text-xs text-brand-slate-500 dark:text-brand-slate-400 py-6 text-center">
+              No active or pending trips assigned currently.
+            </div>
+          </div>
+          <div className="glass-panel p-6 rounded-xl space-y-4">
+            <h3 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Recent Fuel Entries</h3>
+            <div className="text-xs text-brand-slate-500 dark:text-brand-slate-400 py-6 text-center">
+              No recent fuel entries logged.
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (user?.role === 'Safety Officer') {
+    return (
+      <div className="space-y-6">
+        <div className="p-6 rounded-2xl glass-panel text-left space-y-2">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-blue">Safety Dashboard</p>
+          <h1 className="text-2xl font-bold text-brand-slate-900 dark:text-white font-display">Compliance and Safety Operations</h1>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left">
+          <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
+            <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Total Drivers</span>
+            <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">12</p>
+          </div>
+          <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
+            <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Active Drivers</span>
+            <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">9</p>
+          </div>
+          <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
+            <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Expired Licenses</span>
+            <p className="text-2xl font-bold text-brand-red mt-1">0</p>
+          </div>
+          <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
+            <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Safety Average</span>
+            <p className="text-2xl font-bold text-brand-green mt-1">94%</p>
+          </div>
+        </div>
+        <div className="glass-panel p-6 rounded-xl text-left space-y-4">
+          <h3 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">License Expiry Alerts (Expiring in 30 Days)</h3>
+          <div className="text-xs text-brand-slate-550 dark:text-brand-slate-400 py-6 text-center">
+            All driver licenses are compliant and fully valid.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (user?.role === 'Financial Analyst') {
+    return (
+      <div className="space-y-6 text-left">
+        <div className="p-6 rounded-2xl glass-panel space-y-2">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-blue">Financial Dashboard</p>
+          <h1 className="text-2xl font-bold text-brand-slate-900 dark:text-white font-display">Operational Expense Analytics</h1>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
+            <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Total Fuel Overhead</span>
+            <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">₹425,000</p>
+          </div>
+          <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
+            <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Maintenance Spent</span>
+            <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">₹182,000</p>
+          </div>
+          <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
+            <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Net ROI Score</span>
+            <p className="text-2xl font-bold text-brand-green mt-1">₹14,500/veh</p>
+          </div>
+        </div>
+        <div className="glass-panel p-6 rounded-xl space-y-4">
+          <h3 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Operational Profitability Curve</h3>
+          <div className="text-xs text-brand-slate-500 dark:text-brand-slate-400 py-6 text-center">
+            Select a vehicle or region to view localized cost trends.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

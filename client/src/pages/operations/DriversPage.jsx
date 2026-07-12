@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Plus, Search, Filter, AlertTriangle, ShieldAlert, BadgeCheck } from 'lucide-react';
 import SearchBar from '../../components/common/SearchBar';
 import Table from '../../components/common/Table';
@@ -7,23 +7,44 @@ import Modal from '../../components/common/Modal';
 import EmptyState from '../../components/common/EmptyState';
 import DriverCard from '../../components/driver/DriverCard';
 import { formatDate } from '../../utils/formatters';
-
-const initialDrivers = [
-  { id: 'd-1', name: 'Maya Chen', licenseNumber: 'DL-4021', category: 'Class A', expiryDate: '2026-09-12', contact: '+1 415 555 0188', safetyScore: 92, status: 'Available' },
-  { id: 'd-2', name: 'Luis Ortega', licenseNumber: 'DL-2218', category: 'Class B', expiryDate: '2026-07-20', contact: '+1 310 555 0191', safetyScore: 78, status: 'On Trip' },
-  { id: 'd-3', name: 'Nina Patel', licenseNumber: 'DL-8810', category: 'Class A', expiryDate: '2026-05-04', contact: '+1 646 555 0144', safetyScore: 88, status: 'Suspended' },
-  { id: 'd-4', name: 'Owen Brooks', licenseNumber: 'DL-7765', category: 'Class C', expiryDate: '2026-11-10', contact: '+1 214 555 0112', safetyScore: 95, status: 'Off Duty' }
-];
+import api from '../../services/api';
 
 const DriversPage = () => {
-  const [drivers, setDrivers] = useState(initialDrivers);
+  const [drivers, setDrivers] = useState([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortKey, setSortKey] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [errorMsg, setErrorMsg] = useState(null);
   const pageSize = 4;
+
+  const normalizeDriver = (d) => ({
+    id: d._id || d.id,
+    name: d.name,
+    licenseNumber: d.licenseNumber,
+    category: d.licenseCategory,
+    expiryDate: d.licenseExpiryDate ? d.licenseExpiryDate.substring(0, 10) : '',
+    contact: d.contactNumber,
+    safetyScore: d.safetyScore ?? 100,
+    status: d.status || 'Available',
+    email: d.email || ''
+  });
+
+  const fetchDrivers = async () => {
+    try {
+      const response = await api.get('/drivers');
+      const raw = Array.isArray(response.data) ? response.data : [];
+      setDrivers(raw.map(normalizeDriver));
+    } catch (err) {
+      console.error('Failed to load drivers:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDrivers();
+  }, []);
 
   const filteredDrivers = useMemo(() => {
     const searchTerm = search.toLowerCase();
@@ -61,52 +82,71 @@ const DriversPage = () => {
 
   const handleAddDriver = () => {
     setSelectedDriver(null);
+    setErrorMsg(null);
     setIsModalOpen(true);
   };
 
   const handleEditDriver = (driver) => {
     setSelectedDriver(driver);
+    setErrorMsg(null);
     setIsModalOpen(true);
   };
 
-  const handleDeleteDriver = (id) => {
-    setDrivers((prev) => prev.filter((driver) => driver.id !== id));
+  const handleDeleteDriver = async (id) => {
+    try {
+      if (window.confirm('Are you sure you want to delete this driver?')) {
+        await api.delete(`/drivers/${id}`);
+        setDrivers((prev) => prev.filter((driver) => driver.id !== id));
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete driver');
+    }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setErrorMsg(null);
     const formData = new FormData(event.currentTarget);
-    const nextDriver = {
-      id: selectedDriver?.id || `d-${Date.now()}`,
+    
+    const payload = {
       name: formData.get('name'),
+      email: formData.get('email') || undefined,
       licenseNumber: formData.get('licenseNumber'),
-      category: formData.get('category'),
-      expiryDate: formData.get('expiryDate'),
-      contact: formData.get('contact'),
+      licenseCategory: formData.get('category'),
+      licenseExpiryDate: formData.get('expiryDate'),
+      contactNumber: formData.get('contact'),
       safetyScore: Number(formData.get('safetyScore')),
       status: formData.get('status')
     };
 
-    if (selectedDriver) {
-      setDrivers((prev) => prev.map((driver) => driver.id === selectedDriver.id ? nextDriver : driver));
-    } else {
-      setDrivers((prev) => [nextDriver, ...prev]);
+    try {
+      if (selectedDriver) {
+        const response = await api.put(`/drivers/${selectedDriver.id}`, payload);
+        const updated = normalizeDriver(response.data);
+        setDrivers((prev) => prev.map((driver) => driver.id === selectedDriver.id ? updated : driver));
+      } else {
+        const response = await api.post('/drivers', payload);
+        const created = normalizeDriver(response.data);
+        setDrivers((prev) => [created, ...prev]);
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || 'Validation error while saving driver.');
     }
-    setIsModalOpen(false);
   };
 
   const columns = [
-    { key: 'name', header: 'Driver Name', sortable: true, render: (value, row) => <div><p className="font-semibold text-brand-slate-800">{value}</p><p className="text-xs text-brand-slate-500">{row.category}</p></div> },
+    { key: 'name', header: 'Driver Name', sortable: true, render: (value, row) => <div><p className="font-semibold text-brand-slate-800 dark:text-white">{value}</p><p className="text-xs text-brand-slate-500 dark:text-brand-slate-400">{row.category}</p></div> },
     { key: 'licenseNumber', header: 'License Number', sortable: true },
     { key: 'category', header: 'Category', sortable: true },
     { key: 'expiryDate', header: 'Expiry Date', sortable: true, render: (value) => formatDate(value) },
     { key: 'contact', header: 'Contact' },
-    { key: 'safetyScore', header: 'Safety Score', sortable: true, render: (value) => <div className="flex items-center gap-2"><div className="h-2 w-24 rounded-full bg-brand-slate-200"><div className="h-2 rounded-full bg-brand-blue" style={{ width: `${value}%` }} /></div><span>{value}</span></div> },
+    { key: 'safetyScore', header: 'Safety Score', sortable: true, render: (value) => <div className="flex items-center gap-2"><div className="h-2 w-24 rounded-full bg-brand-slate-200 dark:bg-brand-slate-800"><div className="h-2 rounded-full bg-brand-blue" style={{ width: `${value}%` }} /></div><span>{value}</span></div> },
     { key: 'status', header: 'Status', sortable: true, render: (value) => <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(value)}`}>{value}</span> },
     { key: 'actions', header: 'Actions', render: (_, row) => (
       <div className="flex gap-2">
-        <button onClick={() => handleEditDriver(row)} className="rounded-lg border border-brand-slate-200 px-2 py-1 text-xs font-semibold text-brand-slate-700">Edit</button>
-        <button onClick={() => handleDeleteDriver(row.id)} className="rounded-lg bg-brand-red/10 px-2 py-1 text-xs font-semibold text-brand-red">Delete</button>
+        <button onClick={() => handleEditDriver(row)} className="rounded-lg border border-brand-slate-200 dark:border-brand-slate-800 px-2 py-1 text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-350 hover:bg-brand-slate-50 dark:hover:bg-brand-slate-850">Edit</button>
+        <button onClick={() => handleDeleteDriver(row.id)} className="rounded-lg bg-brand-red/10 px-2 py-1 text-xs font-semibold text-brand-red hover:bg-brand-red/20">Delete</button>
       </div>
     ) }
   ];
@@ -116,10 +156,10 @@ const DriversPage = () => {
       <div className="flex flex-col gap-4 rounded-3xl border border-brand-slate-200 bg-white/70 p-5 shadow-sm dark:border-brand-slate-800 dark:bg-brand-slate-900/60 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-blue">Driver Management</p>
-          <h1 className="text-2xl font-bold text-brand-slate-900 dark:text-white">Enterprise driver operations</h1>
+          <h1 className="text-2xl font-bold text-brand-slate-900 dark:text-white font-display">Enterprise driver operations</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button onClick={handleAddDriver} className="inline-flex items-center gap-2 rounded-xl bg-brand-blue px-4 py-2 text-sm font-semibold text-white">
+          <button onClick={handleAddDriver} className="inline-flex items-center gap-2 rounded-xl bg-brand-blue hover:bg-brand-blue-hover px-4 py-2 text-sm font-semibold text-white cursor-pointer shadow-md shadow-brand-blue/15 transition-all">
             <Plus className="h-4 w-4" /> Add Driver
           </button>
         </div>
@@ -129,8 +169,8 @@ const DriversPage = () => {
         <div className="w-full max-w-xl">
           <SearchBar value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search drivers" onClear={() => setSearch('')} />
         </div>
-        <div className="flex items-center gap-2 rounded-xl border border-brand-slate-200 bg-white/70 px-3 py-2 text-sm text-brand-slate-600">
-          <Filter className="h-4 w-4" /> Sort & filter ready
+        <div className="flex items-center gap-2 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white/70 dark:bg-brand-slate-900/60 px-3 py-2 text-sm text-brand-slate-600 dark:text-brand-slate-400">
+          <Filter className="h-4 w-4" /> Active Driver Registry
         </div>
       </div>
 
@@ -139,18 +179,18 @@ const DriversPage = () => {
           const licenseInfo = licenseState(driver.expiryDate, driver.status);
           const Icon = licenseInfo.icon;
           return (
-            <div key={driver.id} className="rounded-2xl border border-brand-slate-200 bg-white/70 p-4 shadow-sm">
+            <div key={driver.id} className="rounded-2xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white/70 dark:bg-brand-slate-900/60 p-4 shadow-sm">
               <div className="flex items-center justify-between">
-                <p className="font-semibold text-brand-slate-900">{driver.name}</p>
+                <p className="font-semibold text-brand-slate-900 dark:text-white">{driver.name}</p>
                 <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(driver.status)}`}>{driver.status}</span>
               </div>
-              <div className="mt-3 flex items-center gap-2 text-sm text-brand-slate-600">
+              <div className="mt-3 flex items-center gap-2 text-sm text-brand-slate-600 dark:text-brand-slate-400">
                 <Icon className={`h-4 w-4 ${licenseInfo.tone}`} /> <span className={licenseInfo.tone}>{licenseInfo.label}</span>
               </div>
-              <div className="mt-4 h-2 rounded-full bg-brand-slate-200">
+              <div className="mt-4 h-2 rounded-full bg-brand-slate-200 dark:bg-brand-slate-800">
                 <div className="h-2 rounded-full bg-brand-blue" style={{ width: `${driver.safetyScore}%` }} />
               </div>
-              <p className="mt-2 text-xs text-brand-slate-500">Safety score {driver.safetyScore}/100</p>
+              <p className="mt-2 text-xs text-brand-slate-500 dark:text-brand-slate-400">Safety score {driver.safetyScore}/100</p>
             </div>
           );
         })}
@@ -170,35 +210,44 @@ const DriversPage = () => {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={selectedDriver ? 'Edit Driver' : 'Add Driver'} size="lg">
         <form onSubmit={handleSubmit} className="space-y-4">
+          {errorMsg && (
+            <div className="p-3.5 rounded-xl bg-brand-red/10 border border-brand-red/20 text-brand-red text-xs font-medium">
+              {errorMsg}
+            </div>
+          )}
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-semibold">Driver Name</label>
-              <input defaultValue={selectedDriver?.name || ''} name="name" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
+              <input defaultValue={selectedDriver?.name || ''} name="name" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-semibold">Email Address (Optional)</label>
+              <input type="email" defaultValue={selectedDriver?.email || ''} name="email" className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
             </div>
             <div>
               <label className="mb-1 block text-sm font-semibold">License Number</label>
-              <input defaultValue={selectedDriver?.licenseNumber || ''} name="licenseNumber" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
+              <input defaultValue={selectedDriver?.licenseNumber || ''} name="licenseNumber" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
             </div>
             <div>
               <label className="mb-1 block text-sm font-semibold">Category</label>
-              <input defaultValue={selectedDriver?.category || ''} name="category" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
+              <input defaultValue={selectedDriver?.category || ''} name="category" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
             </div>
             <div>
               <label className="mb-1 block text-sm font-semibold">Expiry Date</label>
-              <input type="date" defaultValue={selectedDriver?.expiryDate || ''} name="expiryDate" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
+              <input type="date" defaultValue={selectedDriver?.expiryDate || ''} name="expiryDate" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
             </div>
             <div>
               <label className="mb-1 block text-sm font-semibold">Contact</label>
-              <input defaultValue={selectedDriver?.contact || ''} name="contact" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
+              <input defaultValue={selectedDriver?.contact || ''} name="contact" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
             </div>
             <div>
               <label className="mb-1 block text-sm font-semibold">Safety Score</label>
-              <input type="number" min="0" max="100" defaultValue={selectedDriver?.safetyScore || 90} name="safetyScore" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" />
+              <input type="number" min="0" max="100" defaultValue={selectedDriver?.safetyScore || 100} name="safetyScore" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
             </div>
           </div>
           <div>
             <label className="mb-1 block text-sm font-semibold">Status</label>
-            <select defaultValue={selectedDriver?.status || 'Available'} name="status" className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm">
+            <select defaultValue={selectedDriver?.status || 'Available'} name="status" className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm">
               <option value="Available">Available</option>
               <option value="On Trip">On Trip</option>
               <option value="Off Duty">Off Duty</option>
@@ -206,7 +255,7 @@ const DriversPage = () => {
             </select>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-brand-slate-200 px-4 py-2 text-sm font-semibold text-brand-slate-700">Cancel</button>
+            <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-brand-slate-200 px-4 py-2 text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-350">Cancel</button>
             <button type="submit" className="rounded-xl bg-brand-blue px-4 py-2 text-sm font-semibold text-white">Save Driver</button>
           </div>
         </form>

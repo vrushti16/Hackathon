@@ -120,3 +120,95 @@ module.exports = {
   updateDriver,
   deleteDriver
 };
+
+const getExpiredDrivers = async (req, res) => {
+  try {
+    const today = new Date();
+    const expiredDrivers = await Driver.find({ licenseExpiryDate: { $lt: today } });
+    return res.status(200).json(expiredDrivers);
+  } catch (error) {
+    console.error('Get expired drivers error:', error.message);
+    return res.status(500).json({ message: 'Server error while fetching expired drivers.' });
+  }
+};
+
+const getExpiringDrivers = async (req, res) => {
+  try {
+    const today = new Date();
+    const thirtyDaysLater = new Date();
+    thirtyDaysLater.setDate(today.getDate() + 30);
+    const expiringDrivers = await Driver.find({
+      licenseExpiryDate: { $gte: today, $lte: thirtyDaysLater }
+    });
+    return res.status(200).json(expiringDrivers);
+  } catch (error) {
+    console.error('Get expiring drivers error:', error.message);
+    return res.status(500).json({ message: 'Server error while fetching expiring drivers.' });
+  }
+};
+
+const suspendDriver = async (req, res) => {
+  try {
+    const driver = await Driver.findById(req.params.id);
+    if (!driver) {
+      return res.status(404).json({ message: 'Driver not found.' });
+    }
+    driver.status = 'Suspended';
+    await driver.save();
+    return res.status(200).json(driver);
+  } catch (error) {
+    console.error('Suspend driver error:', error.message);
+    return res.status(500).json({ message: 'Server error while suspending driver.' });
+  }
+};
+
+const activateDriver = async (req, res) => {
+  try {
+    const driver = await Driver.findById(req.params.id);
+    if (!driver) {
+      return res.status(404).json({ message: 'Driver not found.' });
+    }
+    driver.status = 'Available';
+    await driver.save();
+    return res.status(200).json(driver);
+  } catch (error) {
+    console.error('Activate driver error:', error.message);
+    return res.status(500).json({ message: 'Server error while activating driver.' });
+  }
+};
+
+const updateSafetyScore = async (req, res) => {
+  try {
+    const { safetyScore } = req.body;
+    if (safetyScore === undefined || isNaN(safetyScore)) {
+      return res.status(400).json({ message: 'Please provide a valid safety score.' });
+    }
+    const score = Number(safetyScore);
+    if (score < 0 || score > 100) {
+      return res.status(400).json({ message: 'Safety score must be between 0 and 100.' });
+    }
+    const driver = await Driver.findById(req.params.id);
+    if (!driver) {
+      return res.status(404).json({ message: 'Driver not found.' });
+    }
+    driver.safetyScore = score;
+    await driver.save();
+    return res.status(200).json(driver);
+  } catch (error) {
+    console.error('Update safety score error:', error.message);
+    return res.status(500).json({ message: 'Server error while updating safety score.' });
+  }
+};
+
+module.exports = {
+  createDriver,
+  getAllDrivers,
+  getDriverById,
+  updateDriver,
+  deleteDriver,
+  getExpiredDrivers,
+  getExpiringDrivers,
+  suspendDriver,
+  activateDriver,
+  updateSafetyScore
+};

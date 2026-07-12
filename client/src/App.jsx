@@ -9,6 +9,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 
 // Pages
 import Login from './pages/Login';
+import Unauthorized from './pages/Unauthorized';
 import ForgotPassword from './pages/ForgotPassword';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
@@ -28,10 +29,11 @@ function App() {
         <FleetProvider>
           <BrowserRouter>
             <Routes>
-              {/* Public Authentication Route */}
+              {/* Public Authentication Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/unauthorized" element={<Unauthorized />} />
 
               {/* Authenticated Dashboard Core */}
               <Route
@@ -42,16 +44,54 @@ function App() {
                   </ProtectedRoute>
                 }
               >
+                {/* Redirect default root path to dashboard */}
                 <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="vehicles" element={<Vehicles />} />
-                <Route path="maintenance" element={<Maintenance />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="drivers" element={<DriversPage />} />
-                <Route path="trips" element={<TripManagementPage />} />
-                <Route path="fuel" element={<FuelPage />} />
-                <Route path="expenses" element={<ExpensePage />} />
+                
+                <Route path="dashboard" element={
+                  <ProtectedRoute allowedRoles={['Admin', 'Fleet Manager', 'Driver', 'Safety Officer', 'Financial Analyst']}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="vehicles" element={
+                  <ProtectedRoute allowedRoles={['Admin', 'Fleet Manager']}>
+                    <Vehicles />
+                  </ProtectedRoute>
+                } />
+                <Route path="maintenance" element={
+                  <ProtectedRoute allowedRoles={['Admin', 'Fleet Manager']}>
+                    <Maintenance />
+                  </ProtectedRoute>
+                } />
+                <Route path="reports" element={
+                  <ProtectedRoute allowedRoles={['Admin', 'Financial Analyst']}>
+                    <Reports />
+                  </ProtectedRoute>
+                } />
+                <Route path="settings" element={
+                  <ProtectedRoute allowedRoles={['Admin']}>
+                    <Settings />
+                  </ProtectedRoute>
+                } />
+                <Route path="drivers" element={
+                  <ProtectedRoute allowedRoles={['Admin', 'Fleet Manager', 'Safety Officer']}>
+                    <DriversPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="trips" element={
+                  <ProtectedRoute allowedRoles={['Admin', 'Fleet Manager']}>
+                    <TripManagementPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="fuel" element={
+                  <ProtectedRoute allowedRoles={['Admin', 'Fleet Manager', 'Driver']}>
+                    <FuelPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="expenses" element={
+                  <ProtectedRoute allowedRoles={['Admin', 'Financial Analyst']}>
+                    <ExpensePage />
+                  </ProtectedRoute>
+                } />
               </Route>
 
               {/* Catch-all fallback redirects to dashboard */}

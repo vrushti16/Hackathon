@@ -5,6 +5,17 @@ const DriverSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+  email: { 
+    type: String, 
+    lowercase: true, 
+    trim: true,
+    unique: true,
+    sparse: true
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   licenseNumber: { 
     type: String, 
     required: true, 

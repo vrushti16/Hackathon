@@ -73,21 +73,35 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'Please provide email and password.' });
+      return res.status(400).json({ success: false, message: 'Please provide email and password.' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const emailTrimmed = email.trim().toLowerCase();
+    // Explicitly select the password hash since it is set to select: false in the Schema
+    const user = await User.findOne({ email: emailTrimmed }).select('+password');
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password.' });
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    // Reject inactive users
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is inactive. Contact the administrator.'
+      });
     }
 
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
-      return res.status(401).json({ message: 'Invalid email or password.' });
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
 
+    // Update lastLogin timestamp
+    user.lastLogin = new Date();
+    await user.save();
+
     const accessToken = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -99,18 +113,21 @@ const loginUser = async (req, res) => {
     );
 
     return res.status(200).json({
+      success: true,
+      token: accessToken,
+      accessToken,
+      refreshToken,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
-      },
-      accessToken,
-      refreshToken
+        role: user.role,
+        isActive: user.isActive
+      }
     });
   } catch (error) {
     console.error('Login error:', error.message);
-    return res.status(500).json({ message: 'Server error during user login.' });
+    return res.status(500).json({ success: false, message: 'Server error during user login.' });
   }
 };
 

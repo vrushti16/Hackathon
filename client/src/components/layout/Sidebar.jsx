@@ -16,6 +16,7 @@ import {
   ReceiptText
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { ROLE_PERMISSIONS } from '../../config/permissions';
 
 const Sidebar = ({ 
   isOpen, 
@@ -36,6 +37,26 @@ const Sidebar = ({
     { name: 'Reports', path: '/reports', icon: BarChart3 },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
+
+  const filteredNavItems = navItems.filter(item => {
+    const section = item.path.replace('/', '');
+    const permissions = ROLE_PERMISSIONS[user?.role] || [];
+    
+    if (section === 'dashboard') {
+      return (
+        permissions.includes('dashboard') ||
+        permissions.includes('driver-dashboard') ||
+        permissions.includes('safety-dashboard') ||
+        permissions.includes('financial-dashboard')
+      );
+    }
+    
+    if (section === 'trips') {
+      return permissions.includes('trips') || permissions.includes('my-trips');
+    }
+    
+    return permissions.includes(section);
+  });
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white dark:bg-brand-slate-950 border-r border-brand-slate-200 dark:border-brand-slate-900 transition-all duration-300 relative">
@@ -62,9 +83,8 @@ const Sidebar = ({
         </button>
       </div>
 
-      {/* Nav Links */}
       <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-        {navItems.map(item => {
+        {filteredNavItems.map(item => {
           const Icon = item.icon;
           return (
             <NavLink
