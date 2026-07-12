@@ -10,6 +10,10 @@ const ExpenseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Trip' 
   },
+  maintenance: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MaintenanceLog'
+  },
   category: { 
     type: String, 
     enum: ['Fuel', 'Maintenance', 'Toll', 'Driver Allowance', 'Insurance', 'Other'], 

@@ -1,17 +1,21 @@
 const MaintenanceLog = require('../models/MaintenanceLog');
 const Vehicle = require('../models/Vehicle');
 const Expense = require('../models/Expense');
+const Trip = require('../models/Trip');
 
 // Logs a new maintenance event and locks the vehicle status to 'In Shop'
 const createMaintenance = async (req, res) => {
   try {
     const { vehicleId, vehicle, type, description, cost, startDate, status } = req.body;
 
-    // Support both vehicleId (frontend) and vehicle (POSTMAN/README)
     const targetVehicleId = vehicleId || vehicle;
 
     if (!targetVehicleId || !description) {
       return res.status(400).json({ message: 'Please provide vehicle ID and description.' });
+    }
+
+    if (cost !== undefined && cost < 0) {
+      return res.status(400).json({ message: 'Maintenance cost cannot be negative.' });
     }
 
     const foundVehicle = await Vehicle.findById(targetVehicleId);
@@ -21,6 +25,18 @@ const createMaintenance = async (req, res) => {
 
     if (foundVehicle.status === 'Retired') {
       return res.status(400).json({ message: 'Cannot put a retired vehicle in shop.' });
+    }
+
+    // Validation: Vehicle must not be on an active trip
+    const activeTrip = await Trip.findOne({ vehicle: targetVehicleId, status: 'Dispatched' });
+    if (activeTrip) {
+      return res.status(400).json({ message: 'Cannot place vehicle in maintenance while it is on an active trip.' });
+    }
+
+    // Validation: Vehicle must not already have another active maintenance record
+    const activeMaintenance = await MaintenanceLog.findOne({ vehicle: targetVehicleId, status: 'Active' });
+    if (activeMaintenance) {
+      return res.status(400).json({ message: 'Vehicle already has an active maintenance record.' });
     }
 
     const normalizedStatus = status === 'Open' ? 'Active' : status === 'Closed' ? 'Closed' : 'Active';
@@ -76,23 +92,29 @@ const closeMaintenance = async (req, res) => {
     log.endDate = new Date();
     await log.save();
 
-    // Reset vehicle status back to 'Available'
-    const foundVehicle = await Vehicle.findById(log.vehicle);
-    if (foundVehicle && foundVehicle.status !== 'Retired') {
-      foundVehicle.status = 'Available';
-      await foundVehicle.save();
+    // Reset vehicle status back to 'Available' (only if no other active maintenance exists)
+    const activeMaintenanceExists = await MaintenanceLog.findOne({ vehicle: log.vehicle, status: 'Active', _id: { $ne: logId } });
+    if (!activeMaintenanceExists) {
+      const foundVehicle = await Vehicle.findById(log.vehicle);
+      if (foundVehicle && foundVehicle.status !== 'Retired') {
+        foundVehicle.status = 'Available';
+        await foundVehicle.save();
+      }
     }
 
-    // Automatically create a corresponding Expense entry
-    await Expense.create({
-      vehicle: log.vehicle,
-      category: 'Maintenance',
-      amount: log.cost,
-      date: new Date(),
-      description: `Maintenance Closed: ${log.description}`
-    });
+    // Automatically create a corresponding Expense entry (preventing duplicate expense)
+    const existingExpense = await Expense.findOne({ maintenance: logId });
+    if (!existingExpense) {
+      await Expense.create({
+        vehicle: log.vehicle,
+        maintenance: log._id,
+        category: 'Maintenance',
+        amount: log.cost,
+        date: new Date(),
+        description: `Maintenance Closed: ${log.description}`
+      });
+    }
 
-    // Return the updated maintenance log directly (as expected by frontend FleetContext)
     return res.status(200).json(log);
   } catch (error) {
     console.error('Close maintenance error:', error.message);

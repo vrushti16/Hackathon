@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -37,8 +37,27 @@ const TripModal = ({ isOpen, onClose, vehicles, drivers, onSubmit, defaultValues
     }
   });
 
+  const isDriverFitForVehicle = (driver, vehicle) => {
+    if (!vehicle) return true;
+    const vType = String(vehicle.type || vehicle.name || '').toLowerCase();
+    const dLicense = String(driver.licenseCategory || '').toLowerCase();
+
+    if (vType.includes('semi') || vType.includes('heavy') || vType.includes('prima') || vType.includes('signa')) {
+      return dLicense.includes('class a');
+    }
+    if (vType.includes('box') || vType.includes('flatbed') || vType.includes('blazo') || vType.includes('ecomet') || vType.includes('pro') || vType.includes('furio')) {
+      return dLicense.includes('class a') || dLicense.includes('class b');
+    }
+    return true; // Vans/others can be driven by Standard or CDL
+  };
+
   const selectedVehicle = vehicles.find((vehicle) => vehicle.id === watch('vehicleId'));
   const selectedDriver = drivers.find((driver) => driver.id === watch('driverId'));
+
+  const filteredDrivers = useMemo(() => {
+    if (!selectedVehicle) return drivers;
+    return drivers.filter(driver => isDriverFitForVehicle(driver, selectedVehicle));
+  }, [drivers, selectedVehicle]);
 
   useEffect(() => {
     reset({
@@ -79,9 +98,9 @@ const TripModal = ({ isOpen, onClose, vehicles, drivers, onSubmit, defaultValues
             <label className="mb-1 block text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-300">Driver</label>
             <select {...register('driverId')} className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
               <option value="">Select driver</option>
-              {drivers.map((driver) => (
+              {filteredDrivers.map((driver) => (
                 <option value={driver.id} key={driver.id} className="bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white">
-                  {driver.name} • {driver.licenseNumber}
+                  {driver.name} • {driver.licenseNumber} ({driver.licenseCategory})
                 </option>
               ))}
             </select>

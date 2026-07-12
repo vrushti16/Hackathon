@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import api from '../../services/api';
+import { useAuth } from '../../auth/useAuth';
 
 // UI components
 import PageHeader from '../../components/ui/PageHeader';
@@ -17,6 +18,8 @@ import StatCard from '../../components/ui/StatCard';
 import Card from '../../components/ui/Card';
 
 const ExpensePage = React.memo(() => {
+  const { user } = useAuth();
+  const canAdd = user?.role === 'Admin' || user?.role === 'Financial Analyst';
   const [expenses, setExpenses] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [search, setSearch] = useState('');
@@ -80,7 +83,6 @@ const ExpensePage = React.memo(() => {
 
     try {
       const response = await api.post('/expenses', payload);
-      triggerToast?.('Expense saved successfully', 'success');
       setIsModalOpen(false);
       fetchExpenses();
     } catch (err) {
@@ -111,9 +113,11 @@ const ExpensePage = React.memo(() => {
         title="Expense Management"
         subtitle="Track driver invoices, toll gates, fuel and general maintenance operational spend."
       >
-        <Button onClick={() => setIsModalOpen(true)} icon={Plus} variant="primary">
-          Add Expense
-        </Button>
+        {canAdd && (
+          <Button onClick={() => setIsModalOpen(true)} icon={Plus} variant="primary">
+            Add Expense
+          </Button>
+        )}
       </PageHeader>
 
       {/* Statistics Cards */}

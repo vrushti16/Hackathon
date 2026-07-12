@@ -1,6 +1,8 @@
 const FuelLog = require('../models/FuelLog');
 const Expense = require('../models/Expense');
 const Vehicle = require('../models/Vehicle');
+const Driver = require('../models/Driver');
+const Trip = require('../models/Trip');
 
 // ─── FUEL LOG ENDPOINTS ─────────────────────────────────────────────
 
@@ -21,6 +23,21 @@ const createFuelLog = async (req, res) => {
     const vehicle = await Vehicle.findById(vehicleId);
     if (!vehicle) {
       return res.status(404).json({ message: 'Vehicle not found.' });
+    }
+
+    // Driver role constraint: Driver may add fuel logs only for their own active trip vehicle
+    if (req.user && req.user.role === 'Driver') {
+      const driverProfile = await Driver.findOne({ user: req.user.id });
+      if (!driverProfile) {
+        return res.status(403).json({ message: 'Forbidden. No Driver profile linked to this User account.' });
+      }
+      const activeTrip = await Trip.findOne({ driver: driverProfile._id, status: 'Dispatched' });
+      if (!activeTrip) {
+        return res.status(400).json({ message: 'Cannot log fuel. You do not have any active dispatched trips.' });
+      }
+      if (String(activeTrip.vehicle) !== String(vehicleId)) {
+        return res.status(403).json({ message: 'Forbidden. You can only log fuel for the vehicle assigned to your active trip.' });
+      }
     }
 
     // Odometer validation: new reading must be >= current odometer
@@ -116,6 +133,11 @@ const deleteFuelLog = async (req, res) => {
 // POST /api/expenses — Log a direct expense (toll, insurance, driver allowance, etc.)
 const createExpense = async (req, res) => {
   try {
+    // Driver role restriction
+    if (req.user && req.user.role === 'Driver') {
+      return res.status(403).json({ message: 'Forbidden. Drivers cannot create general expenses.' });
+    }
+
     const { vehicleId, tripId, category, amount, date, description } = req.body;
 
     if (!vehicleId || !category || !amount || !description) {

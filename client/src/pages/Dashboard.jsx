@@ -1,5 +1,5 @@
 // Dashboard.jsx - Premium Analytics & Overview Dashboard
-import React, { useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Car, 
   CheckCircle2, 
@@ -32,6 +32,7 @@ import { useFleet } from '../context/FleetContext';
 import KpiCard from '../components/common/KpiCard';
 import StatusBadge from '../components/common/StatusBadge';
 import { useAuth } from '../auth/useAuth';
+import api from '../services/api';
 
 // UI components
 import PageHeader from '../components/ui/PageHeader';
@@ -101,7 +102,7 @@ const Dashboard = React.memo(() => {
       .filter(m => filteredVehicles.some(v => v.id === m.vehicleId))
       .reduce((sum, m) => sum + m.cost, 0);
 
-    const operationalCost = filteredVehicles.reduce((sum, v) => sum + v.operationalCost, 0) + vehicleMaintenanceCost;
+    const operationalCost = filteredVehicles.reduce((sum, v) => sum + (v.operationalCost || 0), 0) + vehicleMaintenanceCost;
 
     return {
       total,
@@ -169,47 +170,179 @@ const Dashboard = React.memo(() => {
     return null;
   };
 
+  const [driverData, setDriverData] = useState(null);
+  const [driverLoading, setDriverLoading] = useState(true);
+  const [driverError, setDriverError] = useState(null);
+
+  const fetchDriverMe = async () => {
+    if (user?.role !== 'Driver') return;
+    setDriverLoading(true);
+    setDriverError(null);
+    try {
+      const response = await api.get('/drivers/me');
+      setDriverData(response.data);
+    } catch (err) {
+      setDriverError(err.response?.data?.message || err.message || 'Failed to load driver details.');
+    } finally {
+      setDriverLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDriverMe();
+  }, [user]);
+
+  const handleTripAction = async (tripId, action) => {
+    try {
+      if (action === 'dispatch') {
+        await api.post(`/trips/${tripId}/dispatch`);
+      } else if (action === 'cancel') {
+        await api.post(`/trips/${tripId}/cancel`);
+      }
+      fetchDriverMe();
+    } catch (err) {
+      alert(err.response?.data?.message || `Failed to ${action} trip`);
+    }
+  };
+
   if (user?.role === 'Driver') {
+    if (driverLoading) {
+      return (
+        <div className="p-6 space-y-4">
+          <ChartSkeleton />
+        </div>
+      );
+    }
+
+    if (driverError || !driverData) {
+      return (
+        <div className="p-6 max-w-lg mx-auto">
+          <EmptyState
+            type="drivers"
+            title="No Driver Profile Found"
+            description={driverError || "Your User account is not linked to any Driver profile. Please contact an Administrator to configure linking."}
+            actionText="Refresh Profile"
+            onActionClick={fetchDriverMe}
+          />
+        </div>
+      );
+    }
+
+    const { driver, activeTrip, completedTrips } = driverData;
+
     return (
       <div className="space-y-6">
+        {/* Welcome Section */}
         <div className="p-6 rounded-2xl glass-panel text-left space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center flex-wrap gap-2">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-blue">Driver Dashboard</p>
-              <h1 className="text-2xl font-bold text-brand-slate-900 dark:text-white font-display">Welcome, {user.name}</h1>
+              <h1 className="text-2xl font-bold text-brand-slate-900 dark:text-white font-display">Welcome, {driver.name}</h1>
             </div>
-            <div className="px-3.5 py-1.5 rounded-xl bg-brand-green/10 text-brand-green text-xs font-bold uppercase tracking-wider">
-              License Status: Valid
+            <div className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold uppercase tracking-wider ${
+              driver.status === 'Available' ? 'bg-brand-green/10 text-brand-green border-brand-green/20' :
+              driver.status === 'On Trip' ? 'bg-brand-blue/10 text-brand-blue border-brand-blue/20' :
+              driver.status === 'Suspended' ? 'bg-brand-red/10 text-brand-red border-brand-red/20' :
+              'bg-brand-slate-100 text-brand-slate-600'
+            }`}>
+              Status: {driver.status}
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
               <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Safety Score</span>
-              <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">98/100</p>
+              <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">{driver.safetyScore}/100</p>
             </div>
             <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
               <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">License Category</span>
-              <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">Class A CDL</p>
+              <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">{driver.licenseCategory}</p>
             </div>
             <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
-              <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Expiry Date</span>
-              <p className="text-2xl font-bold text-brand-slate-900 dark:text-white mt-1">2027-12-15</p>
+              <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">License Expiry</span>
+              <p className="text-xl font-bold text-brand-slate-900 dark:text-white mt-1">{new Date(driver.licenseExpiryDate).toLocaleDateString()}</p>
+            </div>
+            <div className="p-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900/60">
+              <span className="text-[10px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Contact Number</span>
+              <p className="text-xl font-bold text-brand-slate-900 dark:text-white mt-1">{driver.contactNumber}</p>
             </div>
           </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left">
+          {/* Active Trip Info */}
           <div className="glass-panel p-6 rounded-xl space-y-4">
-            <h3 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">My Assigned Trips</h3>
-            <div className="text-xs text-brand-slate-555 dark:text-brand-slate-400 py-6 text-center">
-              No active or pending trips assigned currently.
-            </div>
+            <h3 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">My Assigned Active Trip</h3>
+            {activeTrip ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <span className="text-brand-slate-400 block">Source</span>
+                    <span className="font-semibold text-brand-slate-800 dark:text-white">{activeTrip.source}</span>
+                  </div>
+                  <div>
+                    <span className="text-brand-slate-400 block">Destination</span>
+                    <span className="font-semibold text-brand-slate-800 dark:text-white">{activeTrip.destination}</span>
+                  </div>
+                  <div>
+                    <span className="text-brand-slate-400 block">Assigned Vehicle</span>
+                    <span className="font-semibold text-brand-slate-800 dark:text-white">
+                      {activeTrip.vehicle?.registrationNumber} ({activeTrip.vehicle?.modelName || activeTrip.vehicle?.type})
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-brand-slate-400 block">Cargo Weight</span>
+                    <span className="font-semibold text-brand-slate-800 dark:text-white">{activeTrip.cargoWeight} kg</span>
+                  </div>
+                </div>
+                <div className="pt-2 flex gap-3">
+                  {activeTrip.status === 'Draft' && (
+                    <Button onClick={() => handleTripAction(activeTrip._id || activeTrip.id, 'dispatch')} variant="primary" size="sm">
+                      Start Trip / Dispatch
+                    </Button>
+                  )}
+                  <Button onClick={() => handleTripAction(activeTrip._id || activeTrip.id, 'cancel')} variant="secondary" size="sm" className="text-brand-red">
+                    Cancel Trip
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs text-brand-slate-500 py-6 text-center">
+                No active trip assigned currently.
+              </div>
+            )}
           </div>
+
+          {/* Completed History */}
           <div className="glass-panel p-6 rounded-xl space-y-4">
-            <h3 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Recent Fuel Entries</h3>
-            <div className="text-xs text-brand-slate-555 dark:text-brand-slate-400 py-6 text-center">
-              No recent fuel entries logged.
-            </div>
+            <h3 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Completed Trip History</h3>
+            {completedTrips && completedTrips.length > 0 ? (
+              <div className="overflow-x-auto max-h-60">
+                <table className="w-full text-left text-xs text-brand-slate-700 dark:text-brand-slate-300">
+                  <thead>
+                    <tr className="border-b border-brand-slate-100 dark:border-brand-slate-800 font-bold">
+                      <th className="pb-2">Route</th>
+                      <th className="pb-2">Vehicle</th>
+                      <th className="pb-2">Distance</th>
+                      <th className="pb-2">Completed Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {completedTrips.map((t) => (
+                      <tr key={t._id || t.id} className="border-b border-brand-slate-50 dark:border-brand-slate-900">
+                        <td className="py-2">{t.source} → {t.destination}</td>
+                        <td className="py-2">{t.vehicle?.registrationNumber}</td>
+                        <td className="py-2">{t.actualDistance || t.plannedDistance} km</td>
+                        <td className="py-2">{t.completedAt ? new Date(t.completedAt).toLocaleDateString() : 'N/A'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-xs text-brand-slate-500 py-6 text-center">
+                No completed trips in history.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -378,7 +511,6 @@ const Dashboard = React.memo(() => {
           value={metrics.inShop}
           icon={Wrench}
           trend={metrics.total > 0 ? Math.round((metrics.inShop / metrics.total) * 10) : 0}
-          isCost={true}
           trendLabel="undergoing service"
           isLoading={loading.vehicles || loading.dashboard}
         />

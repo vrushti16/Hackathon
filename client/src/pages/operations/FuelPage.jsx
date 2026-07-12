@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import api from '../../services/api';
+import { useAuth } from '../../auth/useAuth';
 
 // UI components
 import PageHeader from '../../components/ui/PageHeader';
@@ -15,6 +16,8 @@ import StatCard from '../../components/ui/StatCard';
 import Card from '../../components/ui/Card';
 
 const FuelPage = React.memo(() => {
+  const { user } = useAuth();
+  const canAdd = user?.role === 'Admin' || user?.role === 'Driver';
   const [fuelLogs, setFuelLogs] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -112,9 +115,11 @@ const FuelPage = React.memo(() => {
         title="Fuel Logs"
         subtitle="Monitor vehicle fuel efficiency, refuel thresholds, and carbon footprints."
       >
-        <Button onClick={() => setIsModalOpen(true)} icon={Plus} variant="primary">
-          Add Fuel Log
-        </Button>
+        {canAdd && (
+          <Button onClick={() => setIsModalOpen(true)} icon={Plus} variant="primary">
+            Add Fuel Log
+          </Button>
+        )}
       </PageHeader>
 
       {/* KPI Cards Grid */}

@@ -23,6 +23,7 @@ import StatusBadge from '../components/ui/StatusBadge';
 import Card from '../components/ui/Card';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToast } from '../components/ui/Toast';
+import api from '../services/api';
 
 const ROLES_OPTIONS = ['Admin', 'Fleet Manager', 'Driver', 'Safety Officer', 'Financial Analyst'];
 
@@ -36,14 +37,6 @@ const getRoleBadgeColor = (role) => {
     default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700';
   }
 };
-
-const initialUsers = [
-  { id: 'u-1', firstName: 'Sarah', lastName: 'Jenkins', name: 'Sarah Jenkins', email: 'admin@transitops.com', phone: '+1 555-0100', role: 'Admin', status: 'Active', createdDate: '2025-01-15', lastLogin: '2026-07-12' },
-  { id: 'u-2', firstName: 'Michael', lastName: 'Chen', name: 'Michael Chen', email: 'mchen@transitops.com', phone: '+1 555-0101', role: 'Fleet Manager', status: 'Active', createdDate: '2025-02-20', lastLogin: '2026-07-11' },
-  { id: 'u-3', firstName: 'Emily', lastName: 'Rodriguez', name: 'Emily Rodriguez', email: 'erodriguez@transitops.com', phone: '+1 555-0102', role: 'Driver', status: 'Inactive', createdDate: '2025-03-10', lastLogin: '2026-06-30' },
-  { id: 'u-4', firstName: 'James', lastName: 'Wilson', name: 'James Wilson', email: 'jwilson@transitops.com', phone: '+1 555-0103', role: 'Safety Officer', status: 'Active', createdDate: '2025-04-05', lastLogin: '2026-07-10' },
-  { id: 'u-5', firstName: 'Amanda', lastName: 'Patel', name: 'Amanda Patel', email: 'apatel@transitops.com', phone: '+1 555-0104', role: 'Financial Analyst', status: 'Active', createdDate: '2025-05-12', lastLogin: '2026-07-09' },
-];
 
 const ActionMenu = ({ user, onView, onEdit, onToggleStatus, onResetPassword, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -93,7 +86,7 @@ const ActionMenu = ({ user, onView, onEdit, onToggleStatus, onResetPassword, onD
 };
 
 const UserManagement = React.memo(() => {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -109,6 +102,36 @@ const UserManagement = React.memo(() => {
 
   const [selectedUser, setSelectedUser] = useState(null);
   const { addToast } = useToast();
+
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get('/users');
+      const mapped = (res.data?.data || []).map(u => {
+        const nameParts = (u.name || '').trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        return {
+          id: u._id || u.id,
+          name: u.name,
+          firstName,
+          lastName,
+          email: u.email,
+          role: u.role,
+          phone: u.phone || 'N/A',
+          status: u.isActive ? 'Active' : 'Inactive',
+          createdDate: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : 'N/A',
+          lastLogin: u.lastLogin ? new Date(u.lastLogin).toISOString().split('T')[0] : 'Never'
+        };
+      });
+      setUsers(mapped);
+    } catch (err) {
+      addToast(err.response?.data?.message || err.message || 'Failed to fetch users', 'error');
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const filteredUsers = useMemo(() => {
     let result = users;
@@ -140,7 +163,7 @@ const UserManagement = React.memo(() => {
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
 
   // --- Handlers ---
-  const handleAddSubmit = (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const password = formData.get('password');
@@ -150,78 +173,73 @@ const UserManagement = React.memo(() => {
       addToast('Passwords do not match', 'error');
       return;
     }
-    if (password.length < 8) {
-      addToast('Password must be at least 8 characters', 'error');
+    if (password.length < 6) {
+      addToast('Password must be at least 6 characters', 'error');
       return;
     }
 
-    // TODO: API Integration - Replace with fetch POST
-    const newUser = {
-      id: `u-${Date.now()}`,
-      firstName: formData.get('firstName'),
-      lastName: formData.get('lastName'),
-      name: `${formData.get('firstName')} ${formData.get('lastName')}`,
-      email: formData.get('email'),
-      phone: formData.get('phone'),
-      role: formData.get('role'),
-      status: formData.get('status'),
-      createdDate: new Date().toISOString().split('T')[0],
-      lastLogin: 'Never'
-    };
-    
-    setUsers(prev => [newUser, ...prev]);
-    setIsAddModalOpen(false);
-    addToast('User added successfully', 'success');
+    try {
+      await api.post('/users', {
+        name: formData.get('name') || `${formData.get('firstName')} ${formData.get('lastName')}`,
+        email: formData.get('email'),
+        password,
+        role: formData.get('role')
+      });
+      setIsAddModalOpen(false);
+      addToast('User added successfully', 'success');
+      fetchUsers();
+    } catch (err) {
+      addToast(err.response?.data?.message || err.message || 'Failed to add user', 'error');
+    }
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
-    // TODO: API Integration - Replace with fetch PUT
-    setUsers(prev => prev.map(u => {
-      if (u.id === selectedUser.id) {
-        return {
-          ...u,
-          firstName: formData.get('firstName'),
-          lastName: formData.get('lastName'),
-          name: `${formData.get('firstName')} ${formData.get('lastName')}`,
-          phone: formData.get('phone'),
-          role: formData.get('role'),
-          status: formData.get('status')
-        };
-      }
-      return u;
-    }));
-    
-    setIsEditModalOpen(false);
-    addToast('User updated successfully', 'success');
+    try {
+      await api.put(`/users/${selectedUser.id}`, {
+        name: formData.get('name') || `${formData.get('firstName')} ${formData.get('lastName')}`,
+        role: formData.get('role'),
+        isActive: formData.get('status') === 'Active'
+      });
+      setIsEditModalOpen(false);
+      addToast('User updated successfully', 'success');
+      fetchUsers();
+    } catch (err) {
+      addToast(err.response?.data?.message || err.message || 'Failed to update user', 'error');
+    }
   };
 
-  const handleDelete = () => {
-    // TODO: API Integration - Replace with fetch DELETE
-    setUsers(prev => prev.filter(u => u.id !== selectedUser.id));
-    setIsDeleteModalOpen(false);
-    addToast('User deleted successfully', 'success');
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/users/${selectedUser.id}`);
+      setIsDeleteModalOpen(false);
+      addToast('User deleted successfully', 'success');
+      fetchUsers();
+    } catch (err) {
+      addToast(err.response?.data?.message || err.message || 'Failed to delete user', 'error');
+    }
   };
 
-  const handleResetPassword = () => {
-    // TODO: API Integration - Replace with fetch POST to reset-password endpoint
-    setIsResetPasswordModalOpen(false);
-    addToast('Password reset email sent to user', 'success');
+  const handleResetPassword = async () => {
+    try {
+      await api.post(`/users/${selectedUser.id}/reset-password`, { newPassword: 'TransitOps@123' });
+      setIsResetPasswordModalOpen(false);
+      addToast('Password reset successfully to TransitOps@123', 'success');
+    } catch (err) {
+      addToast(err.response?.data?.message || err.message || 'Failed to reset password', 'error');
+    }
   };
 
-  const handleToggleStatus = () => {
-    // TODO: API Integration - Replace with fetch PUT to update status
-    const newStatus = selectedUser.status === 'Active' ? 'Inactive' : 'Active';
-    setUsers(prev => prev.map(u => {
-      if (u.id === selectedUser.id) {
-        return { ...u, status: newStatus };
-      }
-      return u;
-    }));
-    setIsToggleStatusModalOpen(false);
-    addToast(`User ${newStatus === 'Active' ? 'activated' : 'deactivated'} successfully`, 'success');
+  const handleToggleStatus = async () => {
+    try {
+      await api.patch(`/users/${selectedUser.id}/status`);
+      setIsToggleStatusModalOpen(false);
+      addToast('User status updated successfully', 'success');
+      fetchUsers();
+    } catch (err) {
+      addToast(err.response?.data?.message || err.message || 'Failed to toggle status', 'error');
+    }
   };
 
   const columns = [

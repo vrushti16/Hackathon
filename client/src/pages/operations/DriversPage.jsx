@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Plus, AlertTriangle, ShieldAlert, BadgeCheck } from 'lucide-react';
 import { formatDate } from '../../utils/formatters';
 import api from '../../services/api';
+import { useAuth } from '../../auth/useAuth';
 
 // UI components
 import PageHeader from '../../components/ui/PageHeader';
@@ -18,6 +19,8 @@ import Card from '../../components/ui/Card';
 import DriverCard from '../../components/driver/DriverCard';
 
 const DriversPage = React.memo(() => {
+  const { user } = useAuth();
+  const canManage = user?.role === 'Admin' || user?.role === 'Safety Officer';
   const [drivers, setDrivers] = useState([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -30,6 +33,8 @@ const DriversPage = React.memo(() => {
   const [errorMsg, setErrorMsg] = useState(null);
   const pageSize = 4;
 
+  const [driverUsers, setDriverUsers] = useState([]);
+
   const normalizeDriver = (d) => ({
     id: d._id || d.id,
     name: d.name,
@@ -39,7 +44,8 @@ const DriversPage = React.memo(() => {
     contact: d.contactNumber,
     safetyScore: d.safetyScore ?? 100,
     status: d.status || 'Available',
-    email: d.email || ''
+    email: d.email || '',
+    user: d.user?._id || d.user || null
   });
 
   const fetchDrivers = async () => {
@@ -52,8 +58,19 @@ const DriversPage = React.memo(() => {
     }
   };
 
+  const fetchDriverUsers = async () => {
+    try {
+      const response = await api.get('/users');
+      const filtered = (response.data?.data || []).filter(u => u.role === 'Driver');
+      setDriverUsers(filtered);
+    } catch (err) {
+      console.error('Failed to load driver users:', err);
+    }
+  };
+
   useEffect(() => {
     fetchDrivers();
+    fetchDriverUsers();
   }, []);
 
   const filteredDrivers = useMemo(() => {
@@ -131,7 +148,8 @@ const DriversPage = React.memo(() => {
       licenseExpiryDate: formData.get('expiryDate'),
       contactNumber: formData.get('contact'),
       safetyScore: Number(formData.get('safetyScore')),
-      status: formData.get('status')
+      status: formData.get('status'),
+      user: formData.get('user') || undefined
     };
 
     try {
@@ -195,12 +213,16 @@ const DriversPage = React.memo(() => {
       header: 'Actions', 
       render: (_, row) => (
         <div className="flex gap-2">
-          <Button onClick={() => handleEditDriver(row)} variant="outline" size="sm">
-            Edit
-          </Button>
-          <Button onClick={() => handleDeleteDriverClick(row.id)} variant="outline" size="sm" className="text-brand-red hover:bg-brand-red/5 border-brand-red/10">
-            Delete
-          </Button>
+          {canManage && (
+            <Button onClick={() => handleEditDriver(row)} variant="outline" size="sm">
+              Edit
+            </Button>
+          )}
+          {user?.role === 'Admin' && (
+            <Button onClick={() => handleDeleteDriverClick(row.id)} variant="outline" size="sm" className="text-brand-red hover:bg-brand-red/5 border-brand-red/10">
+              Delete
+            </Button>
+          )}
         </div>
       ) 
     }
@@ -214,9 +236,11 @@ const DriversPage = React.memo(() => {
         title="Driver Management"
         subtitle="Manage fleet driver registrations, licensing safety compliance, and roster tracking."
       >
-        <Button onClick={handleAddDriver} icon={Plus} variant="primary">
-          Add Driver
-        </Button>
+        {canManage && (
+          <Button onClick={handleAddDriver} icon={Plus} variant="primary">
+            Add Driver
+          </Button>
+        )}
       </PageHeader>
 
       {/* Filter and Search Bar */}
@@ -357,14 +381,25 @@ const DriversPage = React.memo(() => {
             />
           </div>
           
-          <Select
-            label="Roster Status"
-            id="status"
-            name="status"
-            defaultValue={selectedDriver?.status || 'Available'}
-            options={['Available', 'On Trip', 'Off Duty', 'Suspended']}
-            placeholder={null}
-          />
+          <div className="grid gap-4 md:grid-cols-2">
+            <Select
+              label="Roster Status"
+              id="status"
+              name="status"
+              defaultValue={selectedDriver?.status || 'Available'}
+              options={['Available', 'On Trip', 'Off Duty', 'Suspended']}
+              placeholder={null}
+            />
+
+            <Select
+              label="Linked User Account"
+              id="user"
+              name="user"
+              defaultValue={selectedDriver?.user || ''}
+              options={driverUsers.map(u => ({ label: `${u.name} (${u.email})`, value: u.id }))}
+              placeholder="Unlinked / None"
+            />
+          </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-brand-slate-100 dark:border-brand-slate-900">
             <Button type="button" onClick={() => setIsModalOpen(false)} variant="secondary">

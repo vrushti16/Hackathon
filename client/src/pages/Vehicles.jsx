@@ -12,6 +12,7 @@ import {
   Trash
 } from 'lucide-react';
 import { useFleet } from '../context/FleetContext';
+import { useAuth } from '../auth/useAuth';
 import { formatCurrency } from '../utils/formatters';
 
 import useDebounce from '../hooks/useDebounce';
@@ -54,6 +55,10 @@ const Vehicles = React.memo(() => {
     deleteVehicle, 
     bulkDeleteVehicles 
   } = useFleet();
+
+  const { user } = useAuth();
+  const canManage = user?.role === 'Admin' || user?.role === 'Fleet Manager';
+  const canDelete = user?.role === 'Admin';
 
   // Local Search & Filter & Paginate States
   const [searchQuery, setSearchQuery] = useState('');
@@ -360,26 +365,28 @@ const Vehicles = React.memo(() => {
         title="Vehicles Inventory"
         subtitle="Monitor, edit, and expand TransitOps fleet assets."
       >
-        <Button
-          onClick={() => {
-            reset({
-              registrationNumber: '',
-              name: '',
-              type: 'Cargo Van',
-              capacity: '',
-              odometer: '',
-              acquisitionCost: '',
-              region: 'North America',
-              status: 'Available'
-            });
-            setFormError('');
-            setIsAddModalOpen(true);
-          }}
-          icon={Plus}
-          variant="primary"
-        >
-          Add Vehicle
-        </Button>
+        {canManage && (
+          <Button
+            onClick={() => {
+              reset({
+                registrationNumber: '',
+                name: '',
+                type: 'Cargo Van',
+                capacity: '',
+                odometer: '',
+                acquisitionCost: '',
+                region: 'North America',
+                status: 'Available'
+              });
+              setFormError('');
+              setIsAddModalOpen(true);
+            }}
+            icon={Plus}
+            variant="primary"
+          >
+            Add Vehicle
+          </Button>
+        )}
       </PageHeader>
 
       {/* Search and Filters panel */}

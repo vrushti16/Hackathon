@@ -4,6 +4,7 @@ import TripModal from '../../components/trip/TripModal';
 import TripStepper from '../../components/trip/TripStepper';
 import Drawer from '../../components/common/Drawer';
 import api from '../../services/api';
+import { useAuth } from '../../auth/useAuth';
 
 // UI components
 import PageHeader from '../../components/ui/PageHeader';
@@ -17,6 +18,8 @@ import Button from '../../components/ui/Button';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 const TripManagementPage = React.memo(() => {
+  const { user } = useAuth();
+  const canCreate = user?.role === 'Admin' || user?.role === 'Driver';
   const [trips, setTrips] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers] = useState([]);
@@ -69,7 +72,8 @@ const TripManagementPage = React.memo(() => {
     name: v.modelName || v.name || '',
     capacity: v.maxLoadCapacity || v.capacity || 0,
     odometer: v.odometer || 0,
-    status: v.status || 'Available'
+    status: v.status || 'Available',
+    type: v.type || ''
   })), [vehicles]);
 
   const formattedDrivers = useMemo(() => drivers.map(d => ({
@@ -78,7 +82,8 @@ const TripManagementPage = React.memo(() => {
     licenseNumber: d.licenseNumber,
     expiryDate: d.licenseExpiryDate,
     safetyScore: d.safetyScore,
-    status: d.status
+    status: d.status,
+    licenseCategory: d.licenseCategory || d.category || ''
   })), [drivers]);
 
   const normalizedTrips = useMemo(() => trips.map(t => ({
@@ -223,9 +228,11 @@ const TripManagementPage = React.memo(() => {
         title="Trip Dispatch"
         subtitle="Manage dispatch operations, live route tracking, and check delivery manifests."
       >
-        <Button onClick={() => setIsModalOpen(true)} icon={Plus} variant="primary">
-          Create Trip
-        </Button>
+        {canCreate && (
+          <Button onClick={() => setIsModalOpen(true)} icon={Plus} variant="primary">
+            Create Trip
+          </Button>
+        )}
       </PageHeader>
 
       {/* KPI Cards Grid */}

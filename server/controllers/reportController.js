@@ -438,11 +438,135 @@ const exportReportPDF = async (req, res) => {
   }
 };
 
+const getFuelEfficiencyReport = async (req, res) => {
+  try {
+    const vehicles = await Vehicle.find();
+    const report = [];
+    for (const v of vehicles) {
+      const tripStats = await Trip.aggregate([
+        { $match: { vehicle: v._id, status: 'Completed' } },
+        {
+          $group: {
+            _id: null,
+            distance: { $sum: '$actualDistance' },
+            fuel: { $sum: '$fuelConsumed' },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+      const distance = tripStats[0]?.distance || 0;
+      const fuel = tripStats[0]?.fuel || 0;
+      const count = tripStats[0]?.count || 0;
+
+      const fuelLogs = await FuelLog.find({ vehicle: v._id });
+      const fuelCost = fuelLogs.reduce((sum, f) => sum + f.cost, 0);
+
+      const efficiency = safeDiv(distance, fuel);
+      const costPerKm = safeDiv(fuelCost, distance);
+
+      report.push({
+        vehicle: v,
+        completedDistance: distance,
+        fuelConsumed: fuel,
+        fuelCost,
+        fuelEfficiency: efficiency,
+        costPerKilometer: costPerKm,
+        completedTripCount: count
+      });
+    }
+    return res.status(200).json(report);
+  } catch (error) {
+    console.error('Fuel efficiency report error:', error.message);
+    return res.status(500).json({ success: false, message: 'Server error generating fuel-efficiency report.' });
+  }
+};
+
+const getExpenseSummaryReport = async (req, res) => {
+  try {
+    const { startDate, endDate, vehicle, category } = req.query;
+    const filter = {};
+    if (startDate || endDate) {
+      filter.date = {};
+      if (startDate) filter.date.$gte = new Date(startDate);
+      if (endDate) filter.date.$lte = new Date(endDate);
+    }
+    if (vehicle) filter.vehicle = vehicle;
+    if (category) filter.category = category;
+
+    const expenses = await Expense.find(filter).populate('vehicle');
+
+    const categoryBreakdown = {};
+    const vehicleBreakdown = {};
+    const monthlyBreakdown = {};
+
+    expenses.forEach(e => {
+      categoryBreakdown[e.category] = (categoryBreakdown[e.category] || 0) + e.amount;
+      const vReg = e.vehicle?.registrationNumber || 'Unknown';
+      vehicleBreakdown[vReg] = (vehicleBreakdown[vReg] || 0) + e.amount;
+      const month = new Date(e.date).toISOString().slice(0, 7);
+      monthlyBreakdown[month] = (monthlyBreakdown[month] || 0) + e.amount;
+    });
+
+    return res.status(200).json({
+      success: true,
+      totalExpenses: expenses.reduce((sum, e) => sum + e.amount, 0),
+      categoryBreakdown,
+      vehicleBreakdown,
+      monthlyBreakdown,
+      expenses
+    });
+  } catch (error) {
+    console.error('Expense summary error:', error.message);
+    return res.status(500).json({ success: false, message: 'Server error generating expense summary.' });
+  }
+};
+
+const getTripSummaryReport = async (req, res) => {
+  try {
+    const trips = await Trip.find().populate('vehicle').populate('driver');
+
+    const byStatus = {};
+    const byVehicle = {};
+    const byDriver = {};
+    const monthlyRevenue = {};
+    const monthlyDistance = {};
+
+    trips.forEach(t => {
+      byStatus[t.status] = (byStatus[t.status] || 0) + 1;
+      const vReg = t.vehicle?.registrationNumber || 'Unknown';
+      byVehicle[vReg] = (byVehicle[vReg] || 0) + 1;
+      const dName = t.driver?.name || 'Unknown';
+      byDriver[dName] = (byDriver[dName] || 0) + 1;
+
+      if (t.status === 'Completed') {
+        const month = new Date(t.completedAt || t.updatedAt).toISOString().slice(0, 7);
+        monthlyRevenue[month] = (monthlyRevenue[month] || 0) + (t.revenueGenerated || 0);
+        monthlyDistance[month] = (monthlyDistance[month] || 0) + (t.actualDistance || 0);
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      byStatus,
+      byVehicle,
+      byDriver,
+      monthlyRevenue,
+      monthlyDistance
+    });
+  } catch (error) {
+    console.error('Trip summary error:', error.message);
+    return res.status(500).json({ success: false, message: 'Server error generating trip summary.' });
+  }
+};
+
 module.exports = {
   getDashboardMetrics,
   getVehicleRoi,
   exportRoiCsv,
   getReportMetrics,
   exportReportCSV,
-  exportReportPDF
+  exportReportPDF,
+  getFuelEfficiencyReport,
+  getExpenseSummaryReport,
+  getTripSummaryReport
 };

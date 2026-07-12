@@ -28,8 +28,8 @@ class ErrorBoundary extends React.Component {
               <h2 className="text-2xl font-bold text-brand-slate-900 dark:text-white mb-2">
                 Something went wrong.
               </h2>
-              <p className="text-sm text-brand-slate-600 dark:text-brand-slate-400">
-                We're working on fixing this.
+              <p className="mt-2 text-sm text-brand-slate-500 dark:text-brand-slate-400">
+                {this.state.error ? this.state.error.toString() : "We're working on fixing this."}
               </p>
             </div>
             <div className="flex flex-col gap-3">

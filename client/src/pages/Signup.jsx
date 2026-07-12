@@ -19,7 +19,7 @@ const signupSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(6, 'Confirm Password must be at least 6 characters'),
-  role: z.enum(['Admin', 'FleetManager', 'Driver'], { required_error: 'Role is required' })
+  role: z.enum(['Fleet Manager', 'Driver', 'Safety Officer', 'Financial Analyst'], { required_error: 'Role is required' })
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"], // path of error
@@ -53,7 +53,7 @@ const Signup = () => {
       email: '',
       password: '',
       confirmPassword: '',
-      role: 'FleetManager'
+      role: 'Fleet Manager'
     }
   });
 
@@ -73,9 +73,10 @@ const Signup = () => {
   };
 
   const roleOptions = [
-    { value: 'Admin', label: 'Admin' },
-    { value: 'FleetManager', label: 'Fleet Manager' },
-    { value: 'Driver', label: 'Driver' }
+    { value: 'Fleet Manager', label: 'Fleet Manager' },
+    { value: 'Driver', label: 'Driver' },
+    { value: 'Safety Officer', label: 'Safety Officer' },
+    { value: 'Financial Analyst', label: 'Financial Analyst' }
   ];
 
   return (

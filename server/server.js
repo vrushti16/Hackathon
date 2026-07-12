@@ -20,6 +20,7 @@ const tripRoute = require('./routes/tripRoute');
 const expenseRoute = require('./routes/expenseRoute');
 const dashboardRoute = require('./routes/dashboardRoute');
 const reportRoute = require('./routes/reportRoute');
+const userRoute = require('./routes/userRoute');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -35,6 +36,7 @@ app.use('/api/trips', tripRoute);
 app.use('/api/expenses', expenseRoute);
 app.use('/api/dashboard', dashboardRoute);
 app.use('/api/reports', reportRoute);
+app.use('/api/users', userRoute);
 
 app.get('/health', (req, res) => {
   res.status(200).json({

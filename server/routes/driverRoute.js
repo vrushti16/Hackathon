@@ -10,10 +10,15 @@ const {
   getExpiringDrivers,
   suspendDriver,
   activateDriver,
-  updateSafetyScore
+  getDriverMe,
+  getDriverCompliance
 } = require('../controllers/driverController');
 const { protectRoute } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/roleMiddleware');
+
+// Specific paths must be defined before wildcard parametric paths like /:id
+router.get('/me', protectRoute, authorizeRoles('Driver'), getDriverMe);
+router.get('/compliance', protectRoute, authorizeRoles('Safety Officer', 'Admin', 'Fleet Manager'), getDriverCompliance);
 
 // Specialized monitoring endpoints (must come before /:id)
 router.get('/expired', protectRoute, authorizeRoles('Safety Officer', 'Admin'), getExpiredDrivers);
@@ -31,6 +36,5 @@ router.route('/:id')
 // Action modification routes
 router.patch('/:id/suspend', protectRoute, authorizeRoles('Safety Officer', 'Admin'), suspendDriver);
 router.patch('/:id/activate', protectRoute, authorizeRoles('Safety Officer', 'Admin'), activateDriver);
-router.patch('/:id/safety-score', protectRoute, authorizeRoles('Safety Officer', 'Admin'), updateSafetyScore);
 
 module.exports = router;
