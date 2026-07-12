@@ -552,6 +552,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Do not attempt token refresh for login route
+    if (originalRequest.url && originalRequest.url.includes('/auth/login')) {
+      return Promise.reject(error);
+    }
+
     // JWT Token expired and request hasn't been retried yet
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
