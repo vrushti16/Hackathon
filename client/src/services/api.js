@@ -55,27 +55,6 @@ api.defaults.adapter = async (config) => {
       };
     }
     
-<<<<<<< HEAD
-    // Validate dummy token format
-    if (!token.startsWith('mock_access_token_')) {
-      // Allow real backend JWT tokens to pass validation in the mock adapter
-      currentUser = { id: 'bypass-admin', role: 'Admin' };
-    } else {
-      const userId = token.replace('mock_access_token_', '');
-      const users = mockDb.getUsers();
-      currentUser = users.find(u => u.id === userId);
-    }
-    
-    if (!currentUser) {
-
-      return {
-        status: 401,
-        statusText: 'Unauthorized',
-        headers: {},
-        config,
-        data: { message: 'User not found' }
-      };
-=======
     // Validate token format (allow both mock tokens and real JWTs)
     let userId = null;
     if (token.startsWith('mock_access_token_')) {
@@ -102,7 +81,6 @@ api.defaults.adapter = async (config) => {
       if (!currentUser) {
         currentUser = users[0];
       }
->>>>>>> 00a2b85bc5ed88a89c564b49addd190ca2a78dc1
     }
   }
 
