@@ -9,6 +9,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 
 // Pages
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Vehicles from './pages/Vehicles';
 import Maintenance from './pages/Maintenance';
@@ -28,6 +29,7 @@ function App() {
             <Routes>
               {/* Public Authentication Route */}
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
 
               {/* Authenticated Dashboard Core */}
               <Route 

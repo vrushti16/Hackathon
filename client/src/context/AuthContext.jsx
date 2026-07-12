@@ -61,6 +61,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const registerUser = async (name, email, password, role) => {
+    setLoading(true);
+    setAuthError(null);
+    try {
+      const response = await api.post('/auth/register', { name, email, password, role });
+      return response.data;
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Registration failed. Please try again.';
+      setAuthError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('transitops_access_token');
@@ -72,7 +87,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, authError, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, authError, login, register: registerUser, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
