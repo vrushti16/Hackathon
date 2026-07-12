@@ -23,7 +23,7 @@ api.defaults.adapter = async (config) => {
   const url = fullUrl.replace(/^https?:\/\/[^\/]+/, '');
 
   // Hybrid database bypass: completed endpoints connect to the live MongoDB server
-  if (url.includes('/auth') || url.includes('/vehicles') || url.includes('/drivers')) {
+  if (url.includes('/auth') || url.includes('/vehicles') || url.includes('/drivers') || url.includes('/maintenance') || url.includes('/expenses')) {
     const passConfig = { ...config, adapter: undefined };
     return axios(passConfig);
   }
@@ -519,7 +519,8 @@ api.defaults.adapter = async (config) => {
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('transitops_access_token');
-    if (token) {
+    // Skip stale mock tokens — they cause "jwt malformed" on the real backend
+    if (token && !token.startsWith('mock_')) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;

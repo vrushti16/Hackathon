@@ -290,19 +290,19 @@ const Vehicles = () => {
       key: 'capacity',
       header: 'Capacity (kg)',
       sortable: true,
-      render: (val) => `${val.toLocaleString()} kg`
+      render: (val) => `${(val ?? 0).toLocaleString()} kg`
     },
     {
       key: 'odometer',
       header: 'Odometer',
       sortable: true,
-      render: (val) => `${val.toLocaleString()} mi`
+      render: (val) => `${(val ?? 0).toLocaleString()} km`
     },
     {
       key: 'acquisitionCost',
       header: 'Acquisition Cost',
       sortable: true,
-      render: (val) => formatCurrency(val)
+      render: (val) => formatCurrency(val ?? 0)
     },
     {
       key: 'status',

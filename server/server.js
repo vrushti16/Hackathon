@@ -17,6 +17,7 @@ const authRoute = require('./routes/authRoute');
 const vehicleRoute = require('./routes/vehicleRoute');
 const driverRoute = require('./routes/driverRoute');
 const maintenanceRoute = require('./routes/maintenanceRoute');
+const expenseRoute = require('./routes/expenseRoute');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -30,6 +31,7 @@ app.use('/api/auth', authRoute);
 app.use('/api/vehicles', vehicleRoute);
 app.use('/api/drivers', driverRoute);
 app.use('/api/maintenance', maintenanceRoute);
+app.use('/api/expenses', expenseRoute);
 
 // Health check route
 app.get('/health', (req, res) => {

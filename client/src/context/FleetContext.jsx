@@ -64,12 +64,27 @@ export const FleetProvider = ({ children }) => {
     }
   }, [triggerToast]);
 
+  // Normalize backend vehicle fields to match frontend expectations
+  const normalizeVehicle = (v) => ({
+    id: v._id || v.id,
+    registrationNumber: v.registrationNumber,
+    name: v.modelName || v.name || '',
+    type: v.type,
+    capacity: v.maxLoadCapacity ?? v.capacity ?? 0,
+    odometer: v.odometer ?? 0,
+    acquisitionCost: v.acquisitionCost ?? 0,
+    status: v.status || 'Available',
+    region: v.region || '',
+    ...v
+  });
+
   // Fetch Vehicles
   const fetchVehicles = useCallback(async () => {
     setLoading(prev => ({ ...prev, vehicles: true }));
     try {
       const response = await api.get('/vehicles');
-      setVehicles(response.data);
+      const raw = Array.isArray(response.data) ? response.data : (response.data.vehicles || []);
+      setVehicles(raw.map(normalizeVehicle));
     } catch (err) {
       triggerToast(err.message || 'Failed to fetch vehicles', 'danger');
     } finally {
