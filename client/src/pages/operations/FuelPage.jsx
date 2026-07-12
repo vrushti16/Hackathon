@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import api from '../../services/api';
 
 // UI components
 import PageHeader from '../../components/ui/PageHeader';
@@ -13,18 +14,14 @@ import Button from '../../components/ui/Button';
 import StatCard from '../../components/ui/StatCard';
 import Card from '../../components/ui/Card';
 
-const initialFuelLogs = [
-  { id: 'f-1', vehicle: 'TX-9087-A', trip: 'Dallas → Austin', liters: 142, cost: 180, date: '2026-07-10', efficiency: '6.4 mpg' },
-  { id: 'f-2', vehicle: 'CA-4521-B', trip: 'LA → San Diego', liters: 56, cost: 84, date: '2026-07-08', efficiency: '95 MPGe' },
-  { id: 'f-3', vehicle: 'FL-2104-D', trip: 'Miami → Tampa', liters: 78, cost: 112, date: '2026-07-05', efficiency: '14.5 mpg' }
-];
-
 const FuelPage = React.memo(() => {
-  const [fuelLogs, setFuelLogs] = useState(initialFuelLogs);
+  const [fuelLogs, setFuelLogs] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [liters, setLiters] = useState('');
   const [distance, setDistance] = useState('');
+  const [selectedVehicle, setSelectedVehicle] = useState('');
   const pageSize = 5;
 
   const computedEfficiency = useMemo(() => {
@@ -33,34 +30,78 @@ const FuelPage = React.memo(() => {
     return l > 0 && d > 0 ? (d / l).toFixed(2) : '0.00';
   }, [liters, distance]);
 
+  const fetchFuelLogs = async () => {
+    try {
+      const response = await api.get('/expenses/fuel');
+      const raw = Array.isArray(response.data) ? response.data : [];
+      setFuelLogs(raw);
+    } catch (err) {
+      console.error('Failed to fetch fuel logs:', err);
+    }
+  };
+
+  const fetchVehicles = async () => {
+    try {
+      const response = await api.get('/vehicles');
+      const raw = Array.isArray(response.data) ? response.data : (response.data.vehicles || []);
+      setVehicles(raw);
+    } catch (err) {
+      console.error('Failed to fetch vehicles:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchFuelLogs();
+    fetchVehicles();
+  }, []);
+
   const pagedLogs = useMemo(() => fuelLogs.slice((page - 1) * pageSize, page * pageSize), [fuelLogs, page]);
   const totalPages = Math.max(1, Math.ceil(fuelLogs.length / pageSize));
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const nextLog = {
-      id: `f-${Date.now()}`,
-      vehicle: formData.get('vehicle'),
-      trip: formData.get('trip'),
-      liters: Number(formData.get('liters')),
-      cost: Number(formData.get('cost')),
-      date: formData.get('date'),
-      efficiency: `${computedEfficiency} km/L`
-    };
-    setFuelLogs((prev) => [nextLog, ...prev]);
-    setIsModalOpen(false);
-    setLiters('');
-    setDistance('');
+    const vehicleId = formData.get('vehicleId');
+    const litersNum = Number(formData.get('liters'));
+    const costNum = Number(formData.get('cost'));
+    const dateVal = formData.get('date');
+
+    const vehicleObj = vehicles.find(v => (v._id || v.id) === vehicleId);
+    const currentOdometer = vehicleObj?.odometer || 0;
+    const odometerAtLog = currentOdometer + Number(distance);
+
+    try {
+      await api.post('/expenses/fuel', {
+        vehicleId,
+        liters: litersNum,
+        cost: costNum,
+        date: dateVal,
+        odometerAtLog
+      });
+      setIsModalOpen(false);
+      setLiters('');
+      setDistance('');
+      setSelectedVehicle('');
+      fetchFuelLogs();
+    } catch (err) {
+      console.error('Failed to add fuel log:', err);
+    }
   };
 
   const fuelColumns = [
-    { key: 'vehicle', header: 'Vehicle' },
-    { key: 'trip', header: 'Trip' },
+    { key: 'vehicle', header: 'Vehicle', render: (v) => v?.registrationNumber || 'N/A' },
+    { key: 'odometerAtLog', header: 'Odometer Reading', render: (val) => `${val?.toLocaleString()} km` },
     { key: 'liters', header: 'Liters', render: (value) => `${value}L` },
     { key: 'cost', header: 'Cost', render: (value) => formatCurrency(value) },
     { key: 'date', header: 'Date', render: (value) => formatDate(value) },
-    { key: 'efficiency', header: 'Fuel Efficiency' }
+    {
+      key: 'efficiency',
+      header: 'Fuel Efficiency',
+      render: (_, row) => {
+        // Mock a route or compute dynamic efficiency for display
+        return `${row.liters > 0 ? (row.odometerAtLog / row.liters / 100).toFixed(1) : '12.4'} km/L`;
+      }
+    }
   ];
 
   return (
@@ -90,7 +131,7 @@ const FuelPage = React.memo(() => {
         />
         <StatCard
           title="Efficiency Target"
-          value="9.8 mpg"
+          value="9.8 km/L"
           trend={12}
           trendLabel="optimal fleet score"
         />
@@ -115,20 +156,25 @@ const FuelPage = React.memo(() => {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Fuel Log Entry" size="md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <Input 
-              label="Vehicle Registration" 
-              id="vehicle"
-              name="vehicle" 
-              placeholder="e.g. TX-9087-A"
-              required 
-            />
-            <Input 
-              label="Trip Route" 
-              id="trip"
-              name="trip" 
-              placeholder="e.g. Dallas to Houston"
-              required 
-            />
+            <div className="flex flex-col space-y-1.5">
+              <label htmlFor="vehicleId" className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">
+                Vehicle Registration
+              </label>
+              <select
+                id="vehicleId"
+                name="vehicleId"
+                required
+                value={selectedVehicle}
+                onChange={(e) => setSelectedVehicle(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white/60 dark:bg-brand-slate-900/60 text-xs text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              >
+                <option value="">Select a Vehicle</option>
+                {vehicles.map(v => (
+                  <option key={v._id || v.id} value={v._id || v.id}>{v.registrationNumber}</option>
+                ))}
+              </select>
+            </div>
+            
             <Input 
               label="Liters Refueled" 
               id="liters"

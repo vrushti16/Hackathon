@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import api from '../../services/api';
 
 // UI components
 import PageHeader from '../../components/ui/PageHeader';
@@ -15,19 +16,47 @@ import Button from '../../components/ui/Button';
 import StatCard from '../../components/ui/StatCard';
 import Card from '../../components/ui/Card';
 
-const initialExpenses = [
-  { id: 'e-1', category: 'Fuel', amount: 180, vehicle: 'TX-9087-A', date: '2026-07-10', remarks: 'Refuel at Dallas hub' },
-  { id: 'e-2', category: 'Maintenance', amount: 320, vehicle: 'FL-2104-D', date: '2026-07-08', remarks: 'Tire replacement' },
-  { id: 'e-3', category: 'Parking', amount: 45, vehicle: 'CA-4521-B', date: '2026-07-07', remarks: 'Downtown parking' },
-  { id: 'e-4', category: 'Insurance', amount: 2500, vehicle: 'NY-8890-C', date: '2026-07-05', remarks: 'Quarterly premium' }
-];
-
 const ExpensePage = React.memo(() => {
-  const [expenses, setExpenses] = useState(initialExpenses);
+  const [expenses, setExpenses] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const pageSize = 5;
+
+  const normalizeExpense = (item) => ({
+    id: item._id || item.id,
+    amount: item.amount,
+    vehicle: item.vehicle?.registrationNumber || 'N/A',
+    date: item.date,
+    remarks: item.description,
+    category: item.category
+  });
+
+  const fetchExpenses = async () => {
+    try {
+      const response = await api.get('/expenses');
+      const raw = Array.isArray(response.data) ? response.data : [];
+      setExpenses(raw.map(normalizeExpense));
+    } catch (err) {
+      console.error('Failed to load expenses:', err);
+    }
+  };
+
+  const fetchVehicles = async () => {
+    try {
+      const response = await api.get('/vehicles');
+      const raw = Array.isArray(response.data) ? response.data : (response.data.vehicles || []);
+      setVehicles(raw);
+    } catch (err) {
+      console.error('Failed to load vehicles:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchExpenses();
+    fetchVehicles();
+  }, []);
 
   const filteredExpenses = useMemo(() => {
     const term = search.toLowerCase();
@@ -37,11 +66,26 @@ const ExpensePage = React.memo(() => {
   const pagedExpenses = useMemo(() => filteredExpenses.slice((page - 1) * pageSize, page * pageSize), [filteredExpenses, page]);
   const totalPages = Math.max(1, Math.ceil(filteredExpenses.length / pageSize));
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    setExpenses((prev) => [{ id: `e-${Date.now()}`, category: formData.get('category'), amount: Number(formData.get('amount')), vehicle: formData.get('vehicle'), date: formData.get('date'), remarks: formData.get('remarks') }, ...prev]);
-    setIsModalOpen(false);
+    
+    const payload = {
+      vehicleId: formData.get('vehicleId'),
+      category: formData.get('category'),
+      amount: Number(formData.get('amount')),
+      date: formData.get('date'),
+      description: formData.get('remarks')
+    };
+
+    try {
+      const response = await api.post('/expenses', payload);
+      triggerToast?.('Expense saved successfully', 'success');
+      setIsModalOpen(false);
+      fetchExpenses();
+    } catch (err) {
+      console.error('Failed to save expense:', err);
+    }
   };
 
   const expenseColumns = [
@@ -51,6 +95,13 @@ const ExpensePage = React.memo(() => {
     { key: 'remarks', header: 'Remarks' },
     { key: 'category', header: 'Category' }
   ];
+
+  const vehicleOptions = useMemo(() => {
+    return vehicles.map(v => ({
+      value: v._id || v.id,
+      label: v.registrationNumber
+    }));
+  }, [vehicles]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -127,13 +178,22 @@ const ExpensePage = React.memo(() => {
               min="0"
               required 
             />
-            <Input 
-              label="Vehicle Registration" 
-              id="vehicle"
-              name="vehicle" 
-              placeholder="e.g. TX-9087-A"
-              required 
-            />
+            <div className="flex flex-col space-y-1.5">
+              <label htmlFor="vehicleId" className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">
+                Vehicle Registration
+              </label>
+              <select
+                id="vehicleId"
+                name="vehicleId"
+                required
+                className="w-full px-3.5 py-2.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white/60 dark:bg-brand-slate-900/60 text-xs text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              >
+                <option value="">Select a Vehicle</option>
+                {vehicleOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
             <Input 
               label="Transaction Date" 
               id="date"
