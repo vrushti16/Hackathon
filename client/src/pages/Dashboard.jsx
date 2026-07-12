@@ -428,7 +428,7 @@ const Dashboard = () => {
 
             {/* Recent Activities Panel */}
             <div className="flex flex-col">
-              <div className="glass-panel p-6 rounded-xl space-y-4 flex-1 flex flex-col justify-between max-h-[380px]">
+              <div className="glass-panel p-6 rounded-xl space-y-4 flex-1 flex flex-col justify-between max-h-95">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Live Fleet Activities</h4>

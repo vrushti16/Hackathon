@@ -68,7 +68,7 @@ const Maintenance = () => {
 
   // Split maintenance data into Active (Open) and History (Closed)
   const activeRecords = useMemo(() => {
-    return maintenance.filter(m => m.status === 'Open');
+    return maintenance.filter(m => m.status === 'Open' || m.status === 'Active');
   }, [maintenance]);
 
   const historyRecords = useMemo(() => {
@@ -194,8 +194,9 @@ const Maintenance = () => {
       render: (_, row) => (
         <button
           onClick={() => handleCloseTicket(row.id)}
+          disabled={row.status === 'Closed'}
           type="button"
-          className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 hover:border-brand-green/30 hover:bg-brand-green/5 hover:text-brand-green text-xs font-semibold transition-colors cursor-pointer"
+          className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 hover:border-brand-green/30 hover:bg-brand-green/5 hover:text-brand-green text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <CheckCircle className="w-3.5 h-3.5" />
           <span>Complete Ticket</span>
