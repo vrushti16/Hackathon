@@ -84,6 +84,7 @@ export const AuthProvider = ({ children }) => {
     sessionStorage.removeItem('transitops_access_token');
     sessionStorage.removeItem('transitops_refresh_token');
     sessionStorage.removeItem('transitops_user');
+    window.location.href = '/login';
   };
 
   return (
