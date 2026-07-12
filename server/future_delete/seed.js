@@ -3,13 +3,13 @@ const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 // Import all models
-const User = require('./models/User');
-const Vehicle = require('./models/Vehicle');
-const Driver = require('./models/Driver');
-const Trip = require('./models/Trip');
-const MaintenanceLog = require('./models/MaintenanceLog');
-const FuelLog = require('./models/FuelLog');
-const Expense = require('./models/Expense');
+const User = require('../models/User');
+const Vehicle = require('../models/Vehicle');
+const Driver = require('../models/Driver');
+const Trip = require('../models/Trip');
+const MaintenanceLog = require('../models/MaintenanceLog');
+const FuelLog = require('../models/FuelLog');
+const Expense = require('../models/Expense');
 
 const seedAllModels = async () => {
   try {
@@ -27,7 +27,7 @@ const seedAllModels = async () => {
     await Expense.deleteMany({});
     console.log('Cleared all collections.');
 
-    // 1. Seed User
+    // 1. Seed Users
     const hashedPassword = await bcrypt.hash('admin123', 10);
     const adminUser = await User.create({
       name: 'System Admin',
@@ -35,7 +35,13 @@ const seedAllModels = async () => {
       password: hashedPassword,
       role: 'Admin'
     });
-    console.log('Created User collection document.');
+    const demoUser = await User.create({
+      name: 'Nandana Suresh',
+      email: 'nandanasn77@gmail.com',
+      password: hashedPassword,
+      role: 'Admin'
+    });
+    console.log('Created User collection documents.');
 
     // 2. Seed Vehicle
     const vehicle = await Vehicle.create({
