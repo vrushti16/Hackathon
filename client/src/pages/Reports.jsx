@@ -264,7 +264,7 @@ const Reports = () => {
                   
                   <div className="absolute text-center">
                     <p className="text-2xl font-bold font-display text-brand-slate-800 dark:text-white">
-                      ${reportData.costBreakdown.reduce((sum, item) => sum + item.value, 0).toLocaleString()}
+                      ₹{reportData.costBreakdown.reduce((sum, item) => sum + item.value, 0).toLocaleString()}
                     </p>
                     <p className="text-[9px] font-bold text-brand-slate-400 dark:text-brand-slate-500 uppercase tracking-wider">Total Spent</p>
                   </div>
@@ -278,7 +278,7 @@ const Reports = () => {
                         <span className="text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-300">{item.name}</span>
                       </div>
                       <span className="text-xs font-bold text-brand-slate-900 dark:text-white">
-                        ${item.value.toLocaleString()}
+                        ₹{item.value.toLocaleString()}
                       </span>
                     </div>
                   ))}

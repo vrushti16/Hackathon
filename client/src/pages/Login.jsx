@@ -78,7 +78,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 bg-gradient-to-tr from-brand-slate-100 via-brand-slate-50 to-brand-blue/5 dark:from-brand-slate-950 dark:via-brand-slate-950 dark:to-brand-blue/10 transition-colors duration-300 relative">
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 bg-brand-slate-50 dark:bg-brand-slate-950 transition-colors duration-300 relative">
       
       {/* Theme Toggle Top Right */}
       <div className="absolute top-6 right-6">
@@ -86,7 +86,7 @@ const Login = () => {
       </div>
 
       {/* Main Glassmorphic Wrapper */}
-      <div className="w-full max-w-md glass-panel p-8 rounded-2xl shadow-xl space-y-6 animate-scale-in">
+      <div className="w-full max-w-md bg-white dark:bg-brand-slate-900 border border-brand-slate-200 dark:border-brand-slate-800 p-8 rounded-2xl shadow-lg space-y-6 animate-scale-in">
         
         {/* Brand Header */}
         <div className="flex flex-col items-center space-y-3.5 text-center">
