@@ -151,9 +151,6 @@ const DriversPage = React.memo(() => {
   };
 
   const columns = [
-<<<<<<< HEAD
-    { key: 'name', header: 'Driver Name', sortable: true, render: (value, row) => <div><p className="font-semibold text-brand-slate-800 dark:text-white">{value}</p><p className="text-xs text-brand-slate-500 dark:text-brand-slate-400">{row.category}</p></div> },
-=======
     { 
       key: 'name', 
       header: 'Driver Name', 
@@ -165,45 +162,10 @@ const DriversPage = React.memo(() => {
         </div>
       ) 
     },
->>>>>>> 2044ef43bc5207cf1b773116aee16cb0184c66c4
     { key: 'licenseNumber', header: 'License Number', sortable: true },
     { key: 'category', header: 'Category', sortable: true },
     { key: 'expiryDate', header: 'Expiry Date', sortable: true, render: (value) => formatDate(value) },
     { key: 'contact', header: 'Contact' },
-<<<<<<< HEAD
-    { key: 'safetyScore', header: 'Safety Score', sortable: true, render: (value) => <div className="flex items-center gap-2"><div className="h-2 w-24 rounded-full bg-brand-slate-200 dark:bg-brand-slate-800"><div className="h-2 rounded-full bg-brand-blue" style={{ width: `${value}%` }} /></div><span>{value}</span></div> },
-    { key: 'status', header: 'Status', sortable: true, render: (value) => <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(value)}`}>{value}</span> },
-    { key: 'actions', header: 'Actions', render: (_, row) => (
-      <div className="flex gap-2">
-        <button onClick={() => handleEditDriver(row)} className="rounded-lg border border-brand-slate-200 dark:border-brand-slate-800 px-2 py-1 text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-350 hover:bg-brand-slate-50 dark:hover:bg-brand-slate-850">Edit</button>
-        <button onClick={() => handleDeleteDriver(row.id)} className="rounded-lg bg-brand-red/10 px-2 py-1 text-xs font-semibold text-brand-red hover:bg-brand-red/20">Delete</button>
-      </div>
-    ) }
-  ];
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-3xl border border-brand-slate-200 bg-white/70 p-5 shadow-sm dark:border-brand-slate-800 dark:bg-brand-slate-900/60 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-blue">Driver Management</p>
-          <h1 className="text-2xl font-bold text-brand-slate-900 dark:text-white font-display">Enterprise driver operations</h1>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <button onClick={handleAddDriver} className="inline-flex items-center gap-2 rounded-xl bg-brand-blue hover:bg-brand-blue-hover px-4 py-2 text-sm font-semibold text-white cursor-pointer shadow-md shadow-brand-blue/15 transition-all">
-            <Plus className="h-4 w-4" /> Add Driver
-          </button>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="w-full max-w-xl">
-          <SearchBar value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search drivers" onClear={() => setSearch('')} />
-        </div>
-        <div className="flex items-center gap-2 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white/70 dark:bg-brand-slate-900/60 px-3 py-2 text-sm text-brand-slate-600 dark:text-brand-slate-400">
-          <Filter className="h-4 w-4" /> Active Driver Registry
-        </div>
-      </div>
-=======
     { 
       key: 'safetyScore', 
       header: 'Safety Score', 
@@ -264,7 +226,6 @@ const DriversPage = React.memo(() => {
         searchPlaceholder="Search drivers by name, category..."
         onReset={search ? () => { setSearch(''); setPage(1); } : null}
       />
->>>>>>> 2044ef43bc5207cf1b773116aee16cb0184c66c4
 
       {/* KPI Cards Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -272,21 +233,6 @@ const DriversPage = React.memo(() => {
           const licenseInfo = licenseState(driver.expiryDate, driver.status);
           const Icon = licenseInfo.icon;
           return (
-<<<<<<< HEAD
-            <div key={driver.id} className="rounded-2xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white/70 dark:bg-brand-slate-900/60 p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-brand-slate-900 dark:text-white">{driver.name}</p>
-                <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(driver.status)}`}>{driver.status}</span>
-              </div>
-              <div className="mt-3 flex items-center gap-2 text-sm text-brand-slate-600 dark:text-brand-slate-400">
-                <Icon className={`h-4 w-4 ${licenseInfo.tone}`} /> <span className={licenseInfo.tone}>{licenseInfo.label}</span>
-              </div>
-              <div className="mt-4 h-2 rounded-full bg-brand-slate-200 dark:bg-brand-slate-800">
-                <div className="h-2 rounded-full bg-brand-blue" style={{ width: `${driver.safetyScore}%` }} />
-              </div>
-              <p className="mt-2 text-xs text-brand-slate-500 dark:text-brand-slate-400">Safety score {driver.safetyScore}/100</p>
-            </div>
-=======
             <Card
               key={driver.id}
               title={driver.name}
@@ -307,7 +253,6 @@ const DriversPage = React.memo(() => {
                 <p className="mt-2 text-[10px] text-brand-slate-500 font-bold">Safety score {driver.safetyScore}/100</p>
               </div>
             </Card>
->>>>>>> 2044ef43bc5207cf1b773116aee16cb0184c66c4
           );
         })}
       </div>
@@ -355,55 +300,19 @@ const DriversPage = React.memo(() => {
             </div>
           )}
           <div className="grid gap-4 md:grid-cols-2">
-<<<<<<< HEAD
-            <div>
-              <label className="mb-1 block text-sm font-semibold">Driver Name</label>
-              <input defaultValue={selectedDriver?.name || ''} name="name" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold">Email Address (Optional)</label>
-              <input type="email" defaultValue={selectedDriver?.email || ''} name="email" className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold">License Number</label>
-              <input defaultValue={selectedDriver?.licenseNumber || ''} name="licenseNumber" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold">Category</label>
-              <input defaultValue={selectedDriver?.category || ''} name="category" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold">Expiry Date</label>
-              <input type="date" defaultValue={selectedDriver?.expiryDate || ''} name="expiryDate" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold">Contact</label>
-              <input defaultValue={selectedDriver?.contact || ''} name="contact" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold">Safety Score</label>
-              <input type="number" min="0" max="100" defaultValue={selectedDriver?.safetyScore || 100} name="safetyScore" required className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm" />
-            </div>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Status</label>
-            <select defaultValue={selectedDriver?.status || 'Available'} name="status" className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-900 px-3 py-2.5 text-sm">
-              <option value="Available">Available</option>
-              <option value="On Trip">On Trip</option>
-              <option value="Off Duty">Off Duty</option>
-              <option value="Suspended">Suspended</option>
-            </select>
-          </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-brand-slate-200 px-4 py-2 text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-350">Cancel</button>
-            <button type="submit" className="rounded-xl bg-brand-blue px-4 py-2 text-sm font-semibold text-white">Save Driver</button>
-=======
             <Input 
               label="Driver Name" 
               id="name"
               name="name" 
               defaultValue={selectedDriver?.name || ''} 
               required 
+            />
+            <Input 
+              label="Email Address (Optional)" 
+              id="email"
+              name="email" 
+              type="email"
+              defaultValue={selectedDriver?.email || ''} 
             />
             <Input 
               label="License Number" 
@@ -464,7 +373,6 @@ const DriversPage = React.memo(() => {
             <Button type="submit" variant="primary">
               Save Driver
             </Button>
->>>>>>> 2044ef43bc5207cf1b773116aee16cb0184c66c4
           </div>
         </form>
       </Modal>
