@@ -16,15 +16,15 @@ const Button = ({
   className = '',
   ...props
 }) => {
-  const baseStyle = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-blue/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer';
+  const baseStyle = 'inline-flex items-center justify-center font-semibold rounded-xl transition-btn focus:outline-none focus:ring-2 focus:ring-brand-blue/40 cursor-pointer';
 
   const variants = {
-    primary: 'text-white bg-brand-blue hover:bg-brand-blue-hover shadow-sm shadow-brand-blue/20 hover:shadow-md hover:scale-[1.01]',
-    secondary: 'text-brand-slate-700 dark:text-brand-slate-200 bg-brand-slate-100 dark:bg-brand-slate-900 hover:bg-brand-slate-200 dark:hover:bg-brand-slate-800 border border-brand-slate-200/50 dark:border-brand-slate-800/50',
-    success: 'text-white bg-brand-green hover:bg-brand-green/90 shadow-sm shadow-brand-green/20 hover:shadow-md hover:scale-[1.01]',
-    danger: 'text-white bg-brand-red hover:bg-brand-red/90 shadow-sm shadow-brand-red/20 hover:shadow-md hover:scale-[1.01]',
-    outline: 'text-brand-slate-700 dark:text-brand-slate-200 bg-transparent border border-brand-slate-200 dark:border-brand-slate-800 hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900',
-    ghost: 'text-brand-slate-700 dark:text-brand-slate-200 bg-transparent hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900'
+    primary: 'text-white bg-brand-blue shadow-sm shadow-brand-blue/20',
+    secondary: 'text-brand-slate-700 dark:text-brand-slate-200 bg-brand-slate-100 dark:bg-brand-slate-900 border border-brand-slate-200/50 dark:border-brand-slate-800/50',
+    success: 'text-white bg-brand-green shadow-sm shadow-brand-green/20',
+    danger: 'text-white bg-brand-red shadow-sm shadow-brand-red/20',
+    outline: 'text-brand-slate-700 dark:text-brand-slate-200 bg-transparent border border-brand-slate-200 dark:border-brand-slate-800',
+    ghost: 'text-brand-slate-700 dark:text-brand-slate-200 bg-transparent'
   };
 
   const sizes = {

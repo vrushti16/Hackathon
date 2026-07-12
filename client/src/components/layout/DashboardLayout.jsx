@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import PageTransition from './PageTransition';
 import ToastContainer from '../common/Toast';
 import { useFleet } from '../../context/FleetContext';
 
@@ -48,7 +49,9 @@ const DashboardLayout = () => {
         {/* Scrollable Page Container */}
         <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-6">
           <div className="max-w-7xl mx-auto space-y-6">
-            <Outlet />
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
           </div>
         </main>
       </div>

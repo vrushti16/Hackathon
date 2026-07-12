@@ -14,6 +14,8 @@ import {
 import { useFleet } from '../context/FleetContext';
 import { formatCurrency } from '../utils/formatters';
 
+import useDebounce from '../hooks/useDebounce';
+
 // UI components
 import PageHeader from '../components/ui/PageHeader';
 import FilterBar from '../components/ui/FilterBar';
@@ -55,6 +57,7 @@ const Vehicles = React.memo(() => {
 
   // Local Search & Filter & Paginate States
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [localTypeFilter, setLocalTypeFilter] = useState('All');
   const [localStatusFilter, setLocalStatusFilter] = useState('All');
   const [localRegionFilter, setLocalRegionFilter] = useState('All');
@@ -123,9 +126,9 @@ const Vehicles = React.memo(() => {
   const filteredData = useMemo(() => {
     let result = [...vehicles];
 
-    // 1. Text Search matching
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
+    // 1. Text Search matching (using debounced query)
+    if (debouncedSearchQuery.trim()) {
+      const q = debouncedSearchQuery.toLowerCase();
       result = result.filter(v => 
         (v.name && v.name.toLowerCase().includes(q)) || 
         (v.registrationNumber && v.registrationNumber.toLowerCase().includes(q))
