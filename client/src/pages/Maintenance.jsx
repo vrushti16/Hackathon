@@ -16,10 +16,18 @@ import {
   ClipboardList
 } from 'lucide-react';
 import { useFleet } from '../context/FleetContext';
-import Table from '../components/common/Table';
-import Modal from '../components/common/Modal';
-import StatusBadge from '../components/common/StatusBadge';
-import EmptyState from '../components/common/EmptyState';
+
+// UI Components
+import PageHeader from '../components/ui/PageHeader';
+import StatCard from '../components/ui/StatCard';
+import Card from '../components/ui/Card';
+import Table from '../components/ui/Table';
+import Modal from '../components/ui/Modal';
+import StatusBadge from '../components/ui/StatusBadge';
+import EmptyState from '../components/ui/EmptyState';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import Button from '../components/ui/Button';
 
 // Zod validation schema for maintenance tickets
 const maintenanceSchema = z.object({
@@ -65,6 +73,11 @@ const Maintenance = React.memo(() => {
       status: 'Open'
     }
   });
+
+  // Fetch data on load
+  useEffect(() => {
+    // Context automatically fetches, but ensure we have them
+  }, []);
 
   // Split maintenance data into Active (Open) and History (Closed)
   const activeRecords = useMemo(() => {
@@ -165,8 +178,8 @@ const Maintenance = React.memo(() => {
       header: 'Estimated Cost',
       sortable: true,
       render: (val) => (
-        <span className="font-bold text-brand-slate-900 dark:text-white">
-          ${val.toLocaleString()}
+        <span className="font-bold text-brand-slate-900 dark:text-white font-mono">
+          ₹{val.toLocaleString()}
         </span>
       )
     },
@@ -192,15 +205,16 @@ const Maintenance = React.memo(() => {
       header: 'Actions',
       sortable: false,
       render: (_, row) => (
-        <button
+        <Button
           onClick={() => handleCloseTicket(row.id)}
           disabled={row.status === 'Closed'}
-          type="button"
-          className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 hover:border-brand-green/30 hover:bg-brand-green/5 hover:text-brand-green text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="outline"
+          size="sm"
+          icon={CheckCircle}
+          className="text-brand-green hover:bg-brand-green/5 border-brand-green/15"
         >
-          <CheckCircle className="w-3.5 h-3.5" />
-          <span>Complete Ticket</span>
-        </button>
+          Complete Ticket
+        </Button>
       )
     }
   ];
@@ -243,7 +257,7 @@ const Maintenance = React.memo(() => {
       key: 'cost',
       header: 'Total Cost',
       sortable: true,
-      render: (val) => `$${val.toLocaleString()}`
+      render: (val) => `₹${val.toLocaleString()}`
     },
     {
       key: 'startDate',
@@ -270,20 +284,22 @@ const Maintenance = React.memo(() => {
     }
   ];
 
+  const vehicleOptions = useMemo(() => {
+    return vehicles.map(v => ({
+      value: v.id,
+      label: `${v.name} (${v.registrationNumber}) — ${v.status}`
+    }));
+  }, [vehicles]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       
       {/* Page Title & Add Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-brand-slate-900 dark:text-white font-display">
-            Maintenance Dispatch
-          </h2>
-          <p className="text-xs text-brand-slate-500 dark:text-brand-slate-400">
-            Schedule repairs, log diagnostics, and check service records.
-          </p>
-        </div>
-        <button
+      <PageHeader
+        title="Maintenance Dispatch"
+        subtitle="Schedule repairs, log diagnostics, and check service records."
+      >
+        <Button
           onClick={() => {
             reset({
               vehicleId: '',
@@ -297,54 +313,50 @@ const Maintenance = React.memo(() => {
             setFormError('');
             setIsAddModalOpen(true);
           }}
-          type="button"
-          className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 text-sm font-semibold text-white bg-brand-blue hover:bg-brand-blue-hover rounded-xl shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer"
+          icon={Plus}
+          variant="primary"
         >
-          <Plus className="w-4 h-4" />
-          <span>New Maintenance Ticket</span>
-        </button>
-      </div>
+          New Maintenance Ticket
+        </Button>
+      </PageHeader>
 
       {/* Top statistics summary panel */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="glass-panel p-5 rounded-xl flex items-center space-x-4">
-          <div className="p-3 bg-brand-orange/10 text-brand-orange rounded-xl">
-            <Clock className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-brand-slate-400 uppercase tracking-wider">Active Tickets</p>
-            <p className="text-2xl font-bold text-brand-slate-800 dark:text-white font-display">{stats.activeCount}</p>
-          </div>
-        </div>
+        <StatCard
+          title="Active Tickets"
+          value={stats.activeCount}
+          icon={Clock}
+          trend={0}
+          trendLabel="pending resolution"
+          isLoading={loading.maintenance}
+        />
         
-        <div className="glass-panel p-5 rounded-xl flex items-center space-x-4">
-          <div className="p-3 bg-brand-green/10 text-brand-green rounded-xl">
-            <DollarSign className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-brand-slate-400 uppercase tracking-wider">Total Operations Spent</p>
-            <p className="text-2xl font-bold text-brand-slate-800 dark:text-white font-display">${stats.totalCost.toLocaleString()}</p>
-          </div>
-        </div>
+        <StatCard
+          title="Total Operations Spent"
+          value={stats.totalCost}
+          icon={DollarSign}
+          isCost={true}
+          trend={5}
+          trendLabel="vs last month"
+          isLoading={loading.maintenance}
+        />
 
-        <div className="glass-panel p-5 rounded-xl flex items-center space-x-4">
-          <div className="p-3 bg-brand-blue/10 text-brand-blue rounded-xl">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-brand-slate-400 uppercase tracking-wider">Average Ticket Cost</p>
-            <p className="text-2xl font-bold text-brand-slate-800 dark:text-white font-display">${stats.avgTicketCost.toLocaleString()}</p>
-          </div>
-        </div>
+        <StatCard
+          title="Average Ticket Cost"
+          value={stats.avgTicketCost}
+          icon={TrendingUp}
+          isCost={true}
+          trend={-2}
+          trendLabel="per maintenance log"
+          isLoading={loading.maintenance}
+        />
       </div>
 
       {/* Stacked Panels: 1. Active Maintenance tickets */}
-      <div className="glass-panel p-5 rounded-xl space-y-4">
-        <div className="flex items-center space-x-2">
-          <ClipboardList className="w-4 h-4 text-brand-orange" />
-          <h4 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Active Service Tickets</h4>
-        </div>
-        
+      <Card
+        title="Active Service Tickets"
+        icon={ClipboardList}
+      >
         <Table
           columns={activeColumns}
           data={activeRecords}
@@ -357,15 +369,13 @@ const Maintenance = React.memo(() => {
             />
           }
         />
-      </div>
+      </Card>
 
       {/* Stacked Panels: 2. Maintenance Service History */}
-      <div className="glass-panel p-5 rounded-xl space-y-4">
-        <div className="flex items-center space-x-2">
-          <History className="w-4 h-4 text-brand-blue" />
-          <h4 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Service Logs History</h4>
-        </div>
-
+      <Card
+        title="Service Logs History"
+        icon={History}
+      >
         <Table
           columns={historyColumns}
           data={historyRecords}
@@ -377,7 +387,7 @@ const Maintenance = React.memo(() => {
             />
           }
         />
-      </div>
+      </Card>
 
       {/* --- CREATE TICKET MODAL --- */}
       <Modal
@@ -393,92 +403,67 @@ const Maintenance = React.memo(() => {
           )}
 
           {/* Vehicle Dropdown */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Select Vehicle</label>
-            <select
-              aria-label="Select Vehicle"
-              {...register('vehicleId')}
-              className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-blue cursor-pointer ${
-                errors.vehicleId ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-              }`}
-            >
-              <option value="">Select vehicle for ticket...</option>
-              {vehicles.map(v => (
-                <option key={v.id} value={v.id}>
-                  {v.name} ({v.registrationNumber}) — {v.status}
-                </option>
-              ))}
-            </select>
-            {errors.vehicleId && (
-              <p className="text-[10px] text-brand-red font-semibold">{errors.vehicleId.message}</p>
-            )}
-            <p className="text-[10px] text-brand-slate-400 flex items-center">
-              <AlertTriangle className="w-3.5 h-3.5 text-brand-orange mr-1" />
-              Scheduling a ticket will automatically update the vehicle's status to "In Shop"
-            </p>
-          </div>
+          <Select
+            label="Select Vehicle"
+            id="vehicleId"
+            options={vehicleOptions}
+            placeholder="Select vehicle for ticket..."
+            {...register('vehicleId')}
+            error={errors.vehicleId?.message}
+            helperText="Scheduling a ticket will automatically update the vehicle's status to 'In Shop'"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Maintenance Type */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Maintenance Type</label>
-              <select
-                aria-label="Maintenance Type"
-                {...register('type')}
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-blue cursor-pointer"
-              >
-                {MAINTENANCE_TYPES.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="Maintenance Type"
+              id="type"
+              options={MAINTENANCE_TYPES}
+              placeholder={null}
+              {...register('type')}
+              error={errors.type?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
             {/* Estimated Cost */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Estimated Cost ($)</label>
-              <input
-                type="number"
-                placeholder="250"
-                {...register('cost')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.cost ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.cost && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.cost.message}</p>
-              )}
-            </div>
+            <Input
+              label="Estimated Cost (₹)"
+              id="cost"
+              type="number"
+              placeholder="250"
+              {...register('cost')}
+              error={errors.cost?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
             {/* Start Date */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Start Date</label>
-              <input
-                type="date"
-                {...register('startDate')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.startDate ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.startDate && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.startDate.message}</p>
-              )}
-            </div>
+            <Input
+              label="Start Date"
+              id="startDate"
+              type="date"
+              {...register('startDate')}
+              error={errors.startDate?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* End Date (optional initially) */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Target Resolution Date</label>
-              <input
-                type="date"
-                {...register('endDate')}
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue"
-              />
-            </div>
+            {/* End Date */}
+            <Input
+              label="Target Resolution Date"
+              id="endDate"
+              type="date"
+              {...register('endDate')}
+              error={errors.endDate?.message}
+              className="col-span-2 sm:col-span-1"
+            />
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Service Description</label>
+            <label htmlFor="description" className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">
+              Service Description
+            </label>
             <textarea
+              id="description"
               rows={3}
               placeholder="Detail issues e.g. regular engine lube service, fluid flushes, oil filter checks..."
               {...register('description')}
@@ -492,20 +477,19 @@ const Maintenance = React.memo(() => {
           </div>
 
           <div className="flex items-center justify-end space-x-3 pt-4 border-t border-brand-slate-100 dark:border-brand-slate-900">
-            <button
+            <Button
               onClick={() => setIsAddModalOpen(false)}
-              type="button"
-              className="py-2 px-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 text-xs font-semibold text-brand-slate-600 dark:text-brand-slate-400 hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900 transition-colors"
+              variant="secondary"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={submitting}
-              className="py-2 px-4 rounded-xl text-xs font-semibold text-white bg-brand-blue hover:bg-brand-blue-hover disabled:opacity-50 transition-colors cursor-pointer"
+              loading={submitting}
+              variant="primary"
             >
-              {submitting ? 'Creating Ticket...' : 'File Ticket'}
-            </button>
+              File Ticket
+            </Button>
           </div>
         </form>
       </Modal>
