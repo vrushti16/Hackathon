@@ -23,7 +23,15 @@ const FuelPage = React.memo(() => {
   const [fuelLogs, setFuelLogs] = useState(initialFuelLogs);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [liters, setLiters] = useState('');
+  const [distance, setDistance] = useState('');
   const pageSize = 5;
+
+  const computedEfficiency = useMemo(() => {
+    const l = Number(liters);
+    const d = Number(distance);
+    return l > 0 && d > 0 ? (d / l).toFixed(2) : '0.00';
+  }, [liters, distance]);
 
   const pagedLogs = useMemo(() => fuelLogs.slice((page - 1) * pageSize, page * pageSize), [fuelLogs, page]);
   const totalPages = Math.max(1, Math.ceil(fuelLogs.length / pageSize));
@@ -38,10 +46,12 @@ const FuelPage = React.memo(() => {
       liters: Number(formData.get('liters')),
       cost: Number(formData.get('cost')),
       date: formData.get('date'),
-      efficiency: `${formData.get('efficiency')} mpg`
+      efficiency: `${computedEfficiency} km/L`
     };
     setFuelLogs((prev) => [nextLog, ...prev]);
     setIsModalOpen(false);
+    setLiters('');
+    setDistance('');
   };
 
   const fuelColumns = [
@@ -125,6 +135,8 @@ const FuelPage = React.memo(() => {
               name="liters" 
               type="number"
               min="0"
+              value={liters}
+              onChange={(e) => setLiters(e.target.value)}
               required 
             />
             <Input 
@@ -143,13 +155,25 @@ const FuelPage = React.memo(() => {
               required 
             />
             <Input 
-              label="Calculated MPG / Efficiency" 
-              id="efficiency"
-              name="efficiency" 
+              label="Distance Traveled (km)" 
+              id="distance"
+              name="distance" 
               type="number"
               min="0"
+              value={distance}
+              onChange={(e) => setDistance(e.target.value)}
               required 
             />
+            <div className="md:col-span-2">
+              <Input 
+                label="System Calculated Efficiency" 
+                id="efficiency"
+                name="efficiency" 
+                value={`${computedEfficiency} km/L`}
+                readOnly
+                disabled
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-brand-slate-100 dark:border-brand-slate-900">
