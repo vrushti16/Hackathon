@@ -26,6 +26,7 @@ import StatusBadge from '../components/common/StatusBadge';
 import SearchBar from '../components/common/SearchBar';
 import EmptyState from '../components/common/EmptyState';
 import Loader from '../components/common/Loader';
+import { formatCurrency } from '../utils/formatters';
 
 // Zod Validation Schema for CRUD operations
 const vehicleSchema = z.object({
@@ -301,7 +302,7 @@ const Vehicles = () => {
       key: 'acquisitionCost',
       header: 'Acquisition Cost',
       sortable: true,
-      render: (val) => `$${val.toLocaleString()}`
+      render: (val) => formatCurrency(val)
     },
     {
       key: 'status',
@@ -614,7 +615,7 @@ const Vehicles = () => {
 
             {/* Cost */}
             <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Acquisition Cost ($)</label>
+              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Acquisition Cost (₹)</label>
               <input
                 type="number"
                 placeholder="85000"
@@ -766,7 +767,7 @@ const Vehicles = () => {
 
             {/* Cost */}
             <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Acquisition Cost ($)</label>
+              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Acquisition Cost (₹)</label>
               <input
                 type="number"
                 {...register('acquisitionCost')}

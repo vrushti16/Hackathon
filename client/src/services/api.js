@@ -4,7 +4,7 @@ import { mockDb } from './mockDb';
 
 // Create base Axios instance
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -17,14 +17,19 @@ const sleep = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
 api.defaults.adapter = async (config) => {
   await sleep(600); // Simulate network latency
 
-  let { url, method, data, headers } = config;
-  if (config.baseURL && !url.startsWith(config.baseURL) && !url.startsWith('http')) {
-    url = `${config.baseURL.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
+  const { url: rawUrl, method, data, headers } = config;
+  const baseURL = config.baseURL || '';
+  const fullUrl = rawUrl.startsWith('http') ? rawUrl : (rawUrl.startsWith(baseURL) ? rawUrl : `${baseURL}${rawUrl}`);
+  const url = fullUrl.replace(/^https?:\/\/[^\/]+/, '');
+
+  // Hybrid database bypass: completed endpoints connect to the live MongoDB server
+  if (url.includes('/auth') || url.includes('/vehicles') || url.includes('/drivers')) {
+    const passConfig = { ...config, adapter: undefined };
+    return axios(passConfig);
   }
   const body = data ? JSON.parse(data) : null;
   const authHeader = headers['Authorization'] || headers['authorization'];
   
-  // Verify token authentication for secured endpoints
   const isAuthRequired = !url.includes('/auth/login') && !url.includes('/auth/refresh');
   let currentUser = null;
 
@@ -486,8 +491,8 @@ api.defaults.adapter = async (config) => {
         cards: {
           fuelEfficiency: `${avgFuelEfficiency} MPG`,
           fleetUtilization: `${fleetUtilization}%`,
-          roiScore: `$${roiScore}/veh`,
-          operationalCost: `$${totalCost.toLocaleString()}`
+          roiScore: `₹${roiScore}/veh`,
+          operationalCost: `₹${totalCost.toLocaleString()}`
         },
         fuelEfficiencyData: vehicles.map(v => ({ name: v.registrationNumber, efficiency: v.fuelEfficiency })),
         costBreakdown: [
