@@ -2,11 +2,20 @@ const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+const cors = require('cors');
+const authRoute = require('./routes/authRoute');
+const vehicleRoute = require('./routes/vehicleRoute');
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(express.json());
+app.use(cors());
+
+// Routes
+app.use('/api/auth', authRoute);
+app.use('/api/vehicles', vehicleRoute);
 
 // MongoDB Connection
 const connectDB = async () => {
