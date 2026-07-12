@@ -27,7 +27,6 @@ api.defaults.adapter = async (config) => {
     const passConfig = { ...config, adapter: undefined };
     return axios(passConfig);
   }
-
   const body = data ? JSON.parse(data) : null;
   const authHeader = headers['Authorization'] || headers['authorization'];
   

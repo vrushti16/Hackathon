@@ -3,6 +3,16 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+if (!process.env.MONGO_URI) {
+  console.error('Missing MONGO_URI in server/.env. Copy .env.example to .env and set your MongoDB connection string.');
+  process.exit(1);
+}
+
+if (!process.env.JWT_SECRET) {
+  console.error('Missing JWT_SECRET in server/.env. Copy .env.example to .env and set your JWT secret.');
+  process.exit(1);
+}
+
 const authRoute = require('./routes/authRoute');
 const vehicleRoute = require('./routes/vehicleRoute');
 const driverRoute = require('./routes/driverRoute');
