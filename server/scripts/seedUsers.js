@@ -61,17 +61,18 @@ const seedUsers = async () => {
     for (const u of usersToSeed) {
       const emailLower = u.email.trim().toLowerCase();
       const existingUser = await User.findOne({ email: emailLower });
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
       if (existingUser) {
-        console.log(`User ${emailLower} already exists. Updating name, role, and status.`);
+        console.log(`User ${emailLower} already exists. Updating name, role, status, and resetting password.`);
         existingUser.name = u.name;
         existingUser.role = u.role;
+        existingUser.password = hashedPassword;
         existingUser.isActive = true;
         await existingUser.save();
       } else {
         console.log(`Creating user ${emailLower} with role ${u.role}.`);
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
         await User.create({
           name: u.name,
           email: emailLower,
