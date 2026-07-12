@@ -15,6 +15,7 @@ if (!process.env.JWT_SECRET) {
 
 const authRoute = require('./routes/authRoute');
 const vehicleRoute = require('./routes/vehicleRoute');
+const driverRoute = require('./routes/driverRoute');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -26,7 +27,16 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoute);
 app.use('/api/vehicles', vehicleRoute);
+app.use('/api/drivers', driverRoute);
 
+// Health check route
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'TransitOps server is active and connected to MongoDB Atlas.',
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
+  });
+});
 
 // MongoDB Connection
 const connectDB = async () => {
@@ -43,14 +53,5 @@ const connectDB = async () => {
 connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-  });
-});
-
-// Health check route
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    message: 'TransitOps server is active and connected to MongoDB Atlas.',
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
   });
 });
