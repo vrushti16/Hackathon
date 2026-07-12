@@ -29,6 +29,9 @@ const passwordSchema = z.object({
 }).refine(data => data.newPassword === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword']
+}).refine(data => data.currentPassword !== data.newPassword, {
+  message: "New password cannot be the same as current password",
+  path: ['newPassword']
 });
 
 const Profile = () => {
