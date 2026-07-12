@@ -24,7 +24,7 @@ const profileSchema = z.object({
   role: z.string().min(1, 'Role is required')
 });
 
-const Settings = () => {
+const Settings = React.memo(() => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { triggerToast } = useFleet();
@@ -110,7 +110,7 @@ const Settings = () => {
             </div>
 
             <form onSubmit={handleSubmit(onSubmitProfile)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
                 {/* Full name */}
                 <div className="space-y-1.5 col-span-2 sm:col-span-1">
@@ -238,6 +238,6 @@ const Settings = () => {
 
     </div>
   );
-};
+});
 
 export default Settings;

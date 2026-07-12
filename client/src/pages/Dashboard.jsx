@@ -35,7 +35,7 @@ import StatusBadge from '../components/common/StatusBadge';
 import { ChartSkeleton } from '../components/common/Skeleton';
 import EmptyState from '../components/common/EmptyState';
 
-const Dashboard = () => {
+const Dashboard = React.memo(() => {
   const { 
     vehicles, 
     maintenance,
@@ -172,9 +172,10 @@ const Dashboard = () => {
               <Layers className="w-3 h-3 mr-1" /> Vehicle Type
             </span>
             <select
+              aria-label="Vehicle Type"
               value={filters.vehicleType}
               onChange={(e) => updateFilter('vehicleType', e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
+              className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-blue cursor-pointer"
             >
               {filterOptions.types.map(t => (
                 <option key={t} value={t}>{t}</option>
@@ -188,9 +189,10 @@ const Dashboard = () => {
               <HelpCircle className="w-3 h-3 mr-1" /> Status
             </span>
             <select
+              aria-label="Status"
               value={filters.status}
               onChange={(e) => updateFilter('status', e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
+              className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-blue cursor-pointer"
             >
               {filterOptions.statuses.map(s => (
                 <option key={s} value={s}>{s}</option>
@@ -204,9 +206,10 @@ const Dashboard = () => {
               <MapPin className="w-3 h-3 mr-1" /> Region
             </span>
             <select
+              aria-label="Region"
               value={filters.region}
               onChange={(e) => updateFilter('region', e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
+              className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-blue cursor-pointer"
             >
               {filterOptions.regions.map(r => (
                 <option key={r} value={r}>{r}</option>
@@ -230,8 +233,9 @@ const Dashboard = () => {
             onClick={fetchDashboardMetrics}
             disabled={loading.dashboard}
             type="button"
-            className="p-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 text-brand-slate-500 dark:text-brand-slate-400 hover:text-brand-blue hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900 disabled:opacity-50 transition-all cursor-pointer"
+            className="p-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 text-brand-slate-500 dark:text-brand-slate-400 hover:text-brand-blue hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900 disabled:opacity-50 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-blue"
             title="Refresh Metrics"
+            aria-label="Refresh Metrics"
           >
             <RefreshCw className={`w-4 h-4 ${loading.dashboard ? 'animate-spin' : ''}`} />
           </button>
@@ -239,7 +243,7 @@ const Dashboard = () => {
       </div>
 
       {/* 2. KPI Cards Grid Layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KpiCard
           title="Active Vehicles"
           value={metrics.active}
@@ -478,6 +482,6 @@ const Dashboard = () => {
 
     </div>
   );
-};
+});
 
 export default Dashboard;

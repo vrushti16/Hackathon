@@ -14,7 +14,7 @@ const initialExpenses = [
   { id: 'e-4', category: 'Insurance', amount: 2500, vehicle: 'NY-8890-C', date: '2026-07-05', remarks: 'Quarterly premium' }
 ];
 
-const ExpensePage = () => {
+const ExpensePage = React.memo(() => {
   const [expenses, setExpenses] = useState(initialExpenses);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -84,7 +84,7 @@ const ExpensePage = () => {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Expense" size="md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <div><label className="mb-1 block text-sm font-semibold">Category</label><select name="category" className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm"><option value="Fuel">Fuel</option><option value="Maintenance">Maintenance</option><option value="Parking">Parking</option><option value="Toll">Toll</option><option value="Insurance">Insurance</option><option value="Other">Other</option></select></div>
+            <div><label className="mb-1 block text-sm font-semibold">Category</label><select aria-label="Category" name="category" className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm"><option value="Fuel">Fuel</option><option value="Maintenance">Maintenance</option><option value="Parking">Parking</option><option value="Toll">Toll</option><option value="Insurance">Insurance</option><option value="Other">Other</option></select></div>
             <div><label className="mb-1 block text-sm font-semibold">Amount</label><input type="number" min="0" name="amount" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" /></div>
             <div><label className="mb-1 block text-sm font-semibold">Vehicle</label><input name="vehicle" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" /></div>
             <div><label className="mb-1 block text-sm font-semibold">Date</label><input type="date" name="date" required className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm" /></div>
@@ -98,6 +98,6 @@ const ExpensePage = () => {
       </Modal>
     </div>
   );
-};
+});
 
 export default ExpensePage;

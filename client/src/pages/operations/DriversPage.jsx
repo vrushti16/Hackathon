@@ -15,7 +15,7 @@ const initialDrivers = [
   { id: 'd-4', name: 'Owen Brooks', licenseNumber: 'DL-7765', category: 'Class C', expiryDate: '2026-11-10', contact: '+1 214 555 0112', safetyScore: 95, status: 'Off Duty' }
 ];
 
-const DriversPage = () => {
+const DriversPage = React.memo(() => {
   const [drivers, setDrivers] = useState(initialDrivers);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -198,7 +198,7 @@ const DriversPage = () => {
           </div>
           <div>
             <label className="mb-1 block text-sm font-semibold">Status</label>
-            <select defaultValue={selectedDriver?.status || 'Available'} name="status" className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm">
+            <select aria-label="Status" defaultValue={selectedDriver?.status || 'Available'} name="status" className="w-full rounded-xl border border-brand-slate-200 px-3 py-2.5 text-sm">
               <option value="Available">Available</option>
               <option value="On Trip">On Trip</option>
               <option value="Off Duty">Off Duty</option>
@@ -213,6 +213,6 @@ const DriversPage = () => {
       </Modal>
     </div>
   );
-};
+});
 
 export default DriversPage;

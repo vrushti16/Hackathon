@@ -43,7 +43,7 @@ const vehicleSchema = z.object({
 const VEHICLE_TYPES = ['Heavy Duty Truck', 'Electric Van', 'Cargo Van', 'Box Truck', 'Sedan', 'SUV'];
 const REGIONS = ['North America', 'West Coast', 'East Coast', 'South Region', 'Midwest', 'Europe'];
 
-const Vehicles = () => {
+const Vehicles = React.memo(() => {
   const { 
     vehicles, 
     loading, 
@@ -399,6 +399,7 @@ const Vehicles = () => {
             
             {/* Filter by Type */}
             <select
+              aria-label="Filter by Type"
               value={localTypeFilter}
               onChange={(e) => {
                 setLocalTypeFilter(e.target.value);
@@ -414,6 +415,7 @@ const Vehicles = () => {
 
             {/* Filter by Status */}
             <select
+              aria-label="Filter by Status"
               value={localStatusFilter}
               onChange={(e) => {
                 setLocalStatusFilter(e.target.value);
@@ -429,6 +431,7 @@ const Vehicles = () => {
 
             {/* Filter by Region */}
             <select
+              aria-label="Filter by Region"
               value={localRegionFilter}
               onChange={(e) => {
                 setLocalRegionFilter(e.target.value);
@@ -522,7 +525,7 @@ const Vehicles = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Registration */}
             <div className="space-y-1.5 col-span-2 sm:col-span-1">
               <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Registration Number</label>
@@ -678,7 +681,7 @@ const Vehicles = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Registration */}
             <div className="space-y-1.5 col-span-2 sm:col-span-1">
               <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Registration Number</label>
@@ -839,6 +842,6 @@ const Vehicles = () => {
 
     </div>
   );
-};
+});
 
 export default Vehicles;

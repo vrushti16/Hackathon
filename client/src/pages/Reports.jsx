@@ -33,7 +33,7 @@ import { ChartSkeleton, KpiCardSkeleton } from '../components/common/Skeleton';
 import EmptyState from '../components/common/EmptyState';
 import { downloadCsv } from '../utils/formatters';
 
-const Reports = () => {
+const Reports = React.memo(() => {
   const { vehicles, triggerToast } = useFleet();
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -130,7 +130,7 @@ const Reports = () => {
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {loading || !reportData ? (
           Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={i} />)
         ) : (
@@ -293,6 +293,6 @@ const Reports = () => {
 
     </div>
   );
-};
+});
 
 export default Reports;

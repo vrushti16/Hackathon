@@ -12,7 +12,7 @@ const initialFuelLogs = [
   { id: 'f-3', vehicle: 'FL-2104-D', trip: 'Miami → Tampa', liters: 78, cost: 112, date: '2026-07-05', efficiency: '14.5 mpg' }
 ];
 
-const FuelPage = () => {
+const FuelPage = React.memo(() => {
   const [fuelLogs, setFuelLogs] = useState(initialFuelLogs);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -94,6 +94,6 @@ const FuelPage = () => {
       </Modal>
     </div>
   );
-};
+});
 
 export default FuelPage;

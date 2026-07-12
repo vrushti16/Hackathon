@@ -34,7 +34,7 @@ const maintenanceSchema = z.object({
 
 const MAINTENANCE_TYPES = ['Routine', 'Repair', 'Inspection', 'Emergency'];
 
-const Maintenance = () => {
+const Maintenance = React.memo(() => {
   const { 
     vehicles, 
     maintenance, 
@@ -396,8 +396,9 @@ const Maintenance = () => {
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Select Vehicle</label>
             <select
+              aria-label="Select Vehicle"
               {...register('vehicleId')}
-              className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer ${
+              className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-blue cursor-pointer ${
                 errors.vehicleId ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
               }`}
             >
@@ -417,13 +418,14 @@ const Maintenance = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Maintenance Type */}
             <div className="space-y-1.5 col-span-2 sm:col-span-1">
               <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Maintenance Type</label>
               <select
+                aria-label="Maintenance Type"
                 {...register('type')}
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
+                className="w-full px-3.5 py-2 text-xs rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-blue cursor-pointer"
               >
                 {MAINTENANCE_TYPES.map(type => (
                   <option key={type} value={type}>{type}</option>
@@ -510,6 +512,6 @@ const Maintenance = () => {
 
     </div>
   );
-};
+});
 
 export default Maintenance;

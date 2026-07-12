@@ -41,13 +41,14 @@ const Modal = ({
       
       {/* Modal Wrapper Card */}
       <div 
-        className={`w-full ${sizeClasses[size]} glass-modal rounded-2xl relative z-10 flex flex-col max-h-[90vh] shadow-2xl animate-scale-in`}
+        className={`w-[95%] md:w-[80%] lg:w-full ${sizeClasses[size]} glass-modal rounded-2xl relative z-10 flex flex-col max-h-[90vh] shadow-2xl animate-scale-in`}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="modal-title"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-brand-slate-100 dark:border-brand-slate-900">
-          <h3 className="text-lg font-bold text-brand-slate-900 dark:text-white font-display">
+          <h3 id="modal-title" className="text-lg font-bold text-brand-slate-900 dark:text-white font-display">
             {title}
           </h3>
           <button

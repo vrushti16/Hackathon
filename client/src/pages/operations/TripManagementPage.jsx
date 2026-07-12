@@ -26,7 +26,7 @@ const initialTrips = [
   { id: 't-3', vehicleId: 'v-3', driverId: 'd-3', source: 'Boston Yard', destination: 'New York', cargoWeight: 22000, distance: 240, revenue: 3600, status: 'Draft', fuelUsed: 0, odometer: 289500, notes: 'Pending dispatch' }
 ];
 
-const TripManagementPage = () => {
+const TripManagementPage = React.memo(() => {
   const [trips, setTrips] = useState(initialTrips);
   const [vehicles] = useState(initialVehicles);
   const [drivers] = useState(initialDrivers);
@@ -148,6 +148,6 @@ const TripManagementPage = () => {
       </Drawer>
     </div>
   );
-};
+});
 
 export default TripManagementPage;
