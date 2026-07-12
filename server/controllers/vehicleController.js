@@ -1,4 +1,5 @@
 const Vehicle = require('../models/Vehicle');
+const MaintenanceLog = require('../models/MaintenanceLog');
 
 const createVehicle = async (req, res) => {
   try {
@@ -99,6 +100,7 @@ const deleteVehicle = async (req, res) => {
       return res.status(404).json({ message: 'Vehicle not found.' });
     }
 
+    await MaintenanceLog.deleteMany({ vehicle: req.params.id });
     await Vehicle.findByIdAndDelete(req.params.id);
     return res.status(200).json({ message: 'Vehicle successfully removed from registry.' });
   } catch (error) {
@@ -107,10 +109,29 @@ const deleteVehicle = async (req, res) => {
   }
 };
 
+const bulkDeleteVehicles = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'A non-empty ids array is required.' });
+    }
+
+    await MaintenanceLog.deleteMany({ vehicle: { $in: ids } });
+    await Vehicle.deleteMany({ _id: { $in: ids } });
+
+    return res.status(200).json({ message: `${ids.length} vehicles successfully removed from registry.` });
+  } catch (error) {
+    console.error('Bulk delete vehicles error:', error.message);
+    return res.status(500).json({ message: 'Server error while deleting vehicles.' });
+  }
+};
+
 module.exports = {
   createVehicle,
   getAllVehicles,
   getVehicleById,
   updateVehicle,
-  deleteVehicle
+  deleteVehicle,
+  bulkDeleteVehicles
 };

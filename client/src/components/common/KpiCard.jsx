@@ -37,7 +37,7 @@ const KpiCard = ({
     : value;
 
   return (
-    <div className="glass-panel p-6 rounded-xl hover:translate-y-[-2px] transition-all duration-200 group">
+    <div className="glass-panel p-6 rounded-xl hover:-translate-y-0.5 transition-all duration-200 group">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-brand-slate-500 dark:text-brand-slate-400 group-hover:text-brand-slate-700 dark:group-hover:text-brand-slate-200 transition-colors">
           {title}

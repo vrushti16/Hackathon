@@ -5,7 +5,7 @@ const Expense = require('../models/Expense');
 // Logs a new maintenance event and locks the vehicle status to 'In Shop'
 const createMaintenance = async (req, res) => {
   try {
-    const { vehicleId, vehicle, type, description, cost, startDate } = req.body;
+    const { vehicleId, vehicle, type, description, cost, startDate, status } = req.body;
 
     // Support both vehicleId (frontend) and vehicle (POSTMAN/README)
     const targetVehicleId = vehicleId || vehicle;
@@ -23,6 +23,8 @@ const createMaintenance = async (req, res) => {
       return res.status(400).json({ message: 'Cannot put a retired vehicle in shop.' });
     }
 
+    const normalizedStatus = status === 'Open' ? 'Active' : status === 'Closed' ? 'Closed' : 'Active';
+
     // Create the maintenance log entry
     const newLog = await MaintenanceLog.create({
       vehicle: targetVehicleId,
@@ -30,7 +32,7 @@ const createMaintenance = async (req, res) => {
       description,
       cost: cost || 0,
       startDate: startDate || new Date(),
-      status: 'Active'
+      status: normalizedStatus
     });
 
     // Automatically update the vehicle's status to 'In Shop'

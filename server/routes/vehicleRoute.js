@@ -5,7 +5,8 @@ const {
   getAllVehicles,
   getVehicleById,
   updateVehicle,
-  deleteVehicle
+  deleteVehicle,
+  bulkDeleteVehicles
 } = require('../controllers/vehicleController');
 
 const { protectRoute } = require('../middleware/authMiddleware');
@@ -17,6 +18,7 @@ router.get('/:id', protectRoute, getVehicleById);
 
 // Restricted actions (requires specific roles)
 router.post('/', protectRoute, authorizeRoles('Admin', 'FleetManager'), createVehicle);
+router.post('/bulk-delete', protectRoute, authorizeRoles('Admin', 'FleetManager'), bulkDeleteVehicles);
 router.put('/:id', protectRoute, authorizeRoles('Admin', 'FleetManager'), updateVehicle);
 router.delete('/:id', protectRoute, authorizeRoles('Admin'), deleteVehicle);
 
