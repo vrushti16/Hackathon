@@ -29,7 +29,7 @@ router.route('/')
   .post(protectRoute, authorizeRoles('Safety Officer', 'Admin'), createDriver);
 
 router.route('/:id')
-  .get(protectRoute, authorizeRoles('Safety Officer', 'Fleet Manager', 'Admin'), getDriverById)
+  .get(protectRoute, authorizeRoles('Safety Officer', 'Admin'), getDriverById)
   .put(protectRoute, authorizeRoles('Safety Officer', 'Admin'), updateDriver)
   .delete(protectRoute, authorizeRoles('Admin'), deleteDriver);
 

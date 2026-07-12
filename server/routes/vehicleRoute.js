@@ -17,9 +17,9 @@ router.get('/', protectRoute, getAllVehicles);
 router.get('/:id', protectRoute, getVehicleById);
 
 // Restricted actions (requires specific roles)
-router.post('/', protectRoute, authorizeRoles('Admin', 'Fleet Manager'), createVehicle);
-router.post('/bulk-delete', protectRoute, authorizeRoles('Admin', 'Fleet Manager'), bulkDeleteVehicles);
-router.put('/:id', protectRoute, authorizeRoles('Admin', 'Fleet Manager'), updateVehicle);
+router.post('/', protectRoute, authorizeRoles('Admin'), createVehicle);
+router.post('/bulk-delete', protectRoute, authorizeRoles('Admin'), bulkDeleteVehicles);
+router.put('/:id', protectRoute, authorizeRoles('Admin'), updateVehicle);
 router.delete('/:id', protectRoute, authorizeRoles('Admin'), deleteVehicle);
 
 module.exports = router;

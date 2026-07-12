@@ -15,11 +15,6 @@ const usersToSeed = [
     role: "Admin"
   },
   {
-    name: "Tithi Mistry",
-    email: "tithimistry6906@gmail.com",
-    role: "Fleet Manager"
-  },
-  {
     name: "Vrushti",
     email: "vrushti1020@gmail.com",
     role: "Safety Officer"

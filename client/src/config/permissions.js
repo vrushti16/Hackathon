@@ -15,16 +15,6 @@ export const ROLE_PERMISSIONS = {
     "safety"
   ],
 
-  "Fleet Manager": [
-    "dashboard",
-    "vehicles",
-    "drivers-view",
-    "trips",
-    "maintenance",
-    "fuel",
-    "fleet-analytics"
-  ],
-
   Driver: [
     "driver-dashboard",
     "my-trips",

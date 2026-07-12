@@ -13,10 +13,10 @@ const { authorizeRoles } = require('../middleware/roleMiddleware');
 router.get('/', protectRoute, getAllMaintenance);
 
 // Create new maintenance record (FleetManager and Admin)
-router.post('/', protectRoute, authorizeRoles('Admin', 'Fleet Manager'), createMaintenance);
+router.post('/', protectRoute, authorizeRoles('Admin'), createMaintenance);
 
 // Close active maintenance log (Supports both POST as per README and PUT as per client frontend)
-router.post('/:id/close', protectRoute, authorizeRoles('Admin', 'Fleet Manager'), closeMaintenance);
-router.put('/:id/close', protectRoute, authorizeRoles('Admin', 'Fleet Manager'), closeMaintenance);
+router.post('/:id/close', protectRoute, authorizeRoles('Admin'), closeMaintenance);
+router.put('/:id/close', protectRoute, authorizeRoles('Admin'), closeMaintenance);
 
 module.exports = router;

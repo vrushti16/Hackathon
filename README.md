@@ -31,7 +31,7 @@ By unifying all aspects of logistics management, TransitOps ensures that dispatc
 
 | Stakeholder | Role | Core Functionalities |
 | :--- | :--- | :--- |
-| **Fleet Manager** | The Asset Overseer | Registers and updates vehicles, manages their active lifecycles, assigns maintenance tasks, monitors overall fleet utilization, and reviews vehicle ROI metrics. |
+
 | **Dispatcher / Driver** | The Operator | Manages the trip lifecycle (drafting, dispatching, and completing trips), assigns available vehicles/drivers, registers fuel purchases, and logs trip-end odometer metrics. |
 | **Safety Officer** | The Compliance Inspector | Manages driver profiles, monitors license category match and expiration dates, updates safety scores, and configures automated email reminders for expiring licenses. |
 | **Financial Analyst** | The Cost Controller | Logs tolls, driver allowances, and repair expenses; reviews fuel consumption costs, operational overhead, and generates CSV/PDF reports for fleet audits. |
@@ -283,7 +283,7 @@ sequenceDiagram
 ### B. 🔧 Maintenance Lockout Logic
 ```mermaid
 graph TD
-    Start[Fleet Manager creates Maintenance Record] --> DB_Insert[Insert Log into MaintenanceLogs]
+    Start[Admin creates Maintenance Record] --> DB_Insert[Insert Log into MaintenanceLogs]
     DB_Insert --> Update_Vehicle[Update Vehicle Status to 'In Shop']
     
     subgraph Dispatch Guard Checks
@@ -292,7 +292,7 @@ graph TD
         Check_Status -->|Yes| Include[Display in Dispatch Selector]
     end
 
-    Close_M[Fleet Manager Closes Maintenance] --> Update_V_Avail[Update Vehicle Status to 'Available']
+    Close_M[Admin Closes Maintenance] --> Update_V_Avail[Update Vehicle Status to 'Available']
 ```
 
 ### C. 📈 Financial & ROI Calculation Pipeline

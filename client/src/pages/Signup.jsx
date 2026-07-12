@@ -73,7 +73,7 @@ const Signup = () => {
   };
 
   const roleOptions = [
-    { value: 'Fleet Manager', label: 'Fleet Manager' },
+    { value: 'Admin', label: 'Admin' },
     { value: 'Driver', label: 'Driver' },
     { value: 'Safety Officer', label: 'Safety Officer' },
     { value: 'Financial Analyst', label: 'Financial Analyst' }
