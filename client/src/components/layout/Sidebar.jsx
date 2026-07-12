@@ -1,5 +1,5 @@
 // Sidebar.jsx - Application navigation panel
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -13,19 +13,20 @@ import {
   Users,
   Route,
   Fuel,
-  ReceiptText
+  ReceiptText,
+  ShieldCheck
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../auth/useAuth';
 
-const Sidebar = ({ 
+const Sidebar = React.memo(({ 
   isOpen, 
   onClose, 
   isCollapsed, 
   onToggleCollapse 
 }) => {
-  const { logout, user } = useAuth();
+  const { logout, user, canAccessRoute } = useAuth();
 
-  const navItems = [
+  const navItems = useMemo(() => [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Vehicles', path: '/vehicles', icon: Car },
     { name: 'Drivers', path: '/drivers', icon: Users },
@@ -34,8 +35,9 @@ const Sidebar = ({
     { name: 'Expenses', path: '/expenses', icon: ReceiptText },
     { name: 'Maintenance', path: '/maintenance', icon: Wrench },
     { name: 'Reports', path: '/reports', icon: BarChart3 },
+    { name: 'User Management', path: '/users', icon: ShieldCheck },
     { name: 'Settings', path: '/settings', icon: Settings },
-  ];
+  ].filter(item => canAccessRoute(item.path)), [canAccessRoute]);
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white dark:bg-brand-slate-950 border-r border-brand-slate-200 dark:border-brand-slate-900 transition-all duration-300 relative">
@@ -105,9 +107,9 @@ const Sidebar = ({
               <p className="text-xs font-bold text-brand-slate-800 dark:text-white truncate font-display">
                 {user?.name}
               </p>
-              <p className="text-[10px] font-medium text-brand-slate-400 dark:text-brand-slate-500 truncate">
+              <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-brand-blue/10 text-brand-blue dark:bg-brand-blue/20 dark:text-brand-blue-300">
                 {user?.role || 'Fleet Admin'}
-              </p>
+              </span>
             </div>
           </div>
         )}
@@ -154,6 +156,6 @@ const Sidebar = ({
       </div>
     </>
   );
-};
+});
 
 export default Sidebar;

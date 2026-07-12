@@ -10,13 +10,19 @@ import {
   Moon, 
   Sun, 
   Save, 
-  RefreshCcw,
-  ShieldCheck
+  RefreshCcw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useFleet } from '../context/FleetContext';
 import { useTheme } from '../context/ThemeContext';
 import { initDb } from '../services/mockDb';
+
+// UI components
+import PageHeader from '../components/ui/PageHeader';
+import Card from '../components/ui/Card';
+import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -25,10 +31,11 @@ const profileSchema = z.object({
 });
 
 const Settings = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { triggerToast } = useFleet();
   const [submitting, setSubmitting] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const {
     register,
@@ -72,170 +79,137 @@ const Settings = () => {
   };
 
   const handleResetDb = () => {
-    if (window.confirm('Reset database to default mock values? This will wipe all current updates.')) {
-      localStorage.removeItem('transitops_vehicles');
-      localStorage.removeItem('transitops_maintenance');
-      localStorage.removeItem('transitops_activities');
-      initDb();
-      triggerToast('Fleet database re-seeded', 'success');
-      setTimeout(() => {
-        window.location.pathname = '/dashboard';
-      }, 1000);
-    }
+    localStorage.removeItem('transitops_vehicles');
+    localStorage.removeItem('transitops_maintenance');
+    localStorage.removeItem('transitops_activities');
+    initDb();
+    triggerToast('Fleet database re-seeded', 'success');
+    setTimeout(() => {
+      window.location.pathname = '/dashboard';
+    }, 1000);
   };
 
   return (
-    <div className="space-y-6">
-      
+    <div className="space-y-6 animate-fade-in">
       {/* Page Title */}
-      <div>
-        <h2 className="text-xl font-bold tracking-tight text-brand-slate-900 dark:text-white font-display">
-          System Preferences
-        </h2>
-        <p className="text-xs text-brand-slate-500 dark:text-brand-slate-400">
-          Customize dashboard layouts, manage profiles, and control database states.
-        </p>
-      </div>
+      <PageHeader 
+        title="System Preferences" 
+        subtitle="Customize dashboard layouts, manage profiles, and control database states."
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Profile Card Section */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Profile Form */}
-          <div className="glass-panel p-6 rounded-xl space-y-5">
-            <div className="flex items-center space-x-2">
-              <User className="w-4 h-4 text-brand-blue" />
-              <h4 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Administrator Profile</h4>
-            </div>
-
+        <div className="lg:col-span-2">
+          <Card 
+            title="Administrator Profile" 
+            icon={User}
+          >
             <form onSubmit={handleSubmit(onSubmitProfile)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
                 {/* Full name */}
-                <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                  <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Full Name</label>
-                  <input
-                    type="text"
-                    {...register('name')}
-                    className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                      errors.name ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                    }`}
-                  />
-                  {errors.name && (
-                    <p className="text-[10px] text-brand-red font-semibold">{errors.name.message}</p>
-                  )}
-                </div>
+                <Input
+                  label="Full Name"
+                  id="name"
+                  {...register('name')}
+                  error={errors.name?.message}
+                  className="col-span-2 sm:col-span-1"
+                />
 
                 {/* Email */}
-                <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                  <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Email Address</label>
-                  <input
-                    type="email"
-                    {...register('email')}
-                    className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                      errors.email ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                    }`}
-                  />
-                  {errors.email && (
-                    <p className="text-[10px] text-brand-red font-semibold">{errors.email.message}</p>
-                  )}
-                </div>
+                <Input
+                  label="Email Address"
+                  type="email"
+                  id="email"
+                  {...register('email')}
+                  error={errors.email?.message}
+                  className="col-span-2 sm:col-span-1"
+                />
 
                 {/* Role */}
-                <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                  <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Role Designation</label>
-                  <input
-                    type="text"
-                    {...register('role')}
-                    className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                      errors.role ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                    }`}
-                  />
-                  {errors.role && (
-                    <p className="text-[10px] text-brand-red font-semibold">{errors.role.message}</p>
-                  )}
-                </div>
-
-
+                <Input
+                  label="Role Designation"
+                  id="role"
+                  {...register('role')}
+                  error={errors.role?.message}
+                  className="col-span-2 sm:col-span-1"
+                />
 
               </div>
 
               <div className="flex items-center justify-end pt-3">
-                <button
+                <Button
                   type="submit"
-                  disabled={submitting}
-                  className="inline-flex items-center justify-center space-x-2 px-4 py-2 text-xs font-semibold text-white bg-brand-blue hover:bg-brand-blue-hover disabled:opacity-50 rounded-xl transition-all duration-200 cursor-pointer"
+                  loading={submitting}
+                  icon={Save}
+                  variant="primary"
                 >
-                  <Save className="w-3.5 h-3.5" />
-                  <span>{submitting ? 'Saving...' : 'Save Profile'}</span>
-                </button>
+                  Save Profile
+                </Button>
               </div>
             </form>
-          </div>
-
+          </Card>
         </div>
 
         {/* Configurations column */}
         <div className="space-y-6">
           
-          {/* Theme Settings Card */}
-          <div className="glass-panel p-6 rounded-xl space-y-4">
-            <div className="flex items-center space-x-2">
-              <SettingsIcon className="w-4 h-4 text-brand-blue" />
-              <h4 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Appearance Preferences</h4>
-            </div>
-
+          {/* Appearance Preference Card */}
+          <Card
+            title="Appearance Preferences"
+            icon={SettingsIcon}
+          >
             <div className="flex items-center justify-between p-3 rounded-xl bg-brand-slate-50/50 dark:bg-brand-slate-900/20 border border-brand-slate-100 dark:border-brand-slate-900">
               <div className="text-xs">
                 <p className="font-semibold text-brand-slate-700 dark:text-white">Active Theme</p>
                 <p className="text-[10px] text-brand-slate-450 mt-0.5">Toggle between dark and light colors</p>
               </div>
-              <button
+              <Button
                 onClick={toggleTheme}
-                type="button"
-                className="flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-brand-slate-200 dark:border-brand-slate-800 text-xs font-bold bg-white dark:bg-brand-slate-950 text-brand-slate-700 dark:text-brand-slate-350 hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900 transition-colors cursor-pointer"
+                variant="outline"
+                size="sm"
+                icon={theme === 'dark' ? Moon : Sun}
+                className="font-bold border-brand-slate-200 dark:border-brand-slate-800 text-brand-slate-700 dark:text-brand-slate-350"
               >
-                {theme === 'dark' ? (
-                  <>
-                    <Moon className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Dark Mode</span>
-                  </>
-                ) : (
-                  <>
-                    <Sun className="w-3.5 h-3.5 text-yellow-500" />
-                    <span>Light Mode</span>
-                  </>
-                )}
-              </button>
+                {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+              </Button>
             </div>
-          </div>
+          </Card>
 
-          {/* Database Control Settings Card */}
-          <div className="glass-panel p-6 rounded-xl space-y-4">
-            <div className="flex items-center space-x-2">
-              <Database className="w-4 h-4 text-brand-orange" />
-              <h4 className="text-sm font-bold text-brand-slate-800 dark:text-white font-display">Database Control Panel</h4>
-            </div>
-            
-            <p className="text-xs text-brand-slate-500 leading-normal">
+          {/* Database Control Card */}
+          <Card
+            title="Database Control Panel"
+            icon={Database}
+          >
+            <p className="text-xs text-brand-slate-500 leading-normal mb-4">
               Reset fleet database records back to their factory seeds. Useful for resolving mock database testing states.
             </p>
-
-            <button
-              onClick={handleResetDb}
-              type="button"
-              className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 text-xs font-bold text-white bg-brand-orange hover:bg-brand-orange/95 rounded-xl transition-all cursor-pointer"
+            <Button
+              onClick={() => setIsResetConfirmOpen(true)}
+              variant="secondary"
+              fullWidth
+              icon={RefreshCcw}
+              className="text-white bg-brand-orange hover:bg-brand-orange/95 border-none"
             >
-              <RefreshCcw className="w-3.5 h-3.5" />
-              <span>Reset Database to Seed</span>
-            </button>
-          </div>
+              Reset Database to Seed
+            </Button>
+          </Card>
 
         </div>
 
       </div>
 
+      {/* Database Reset Confirmation */}
+      <ConfirmDialog
+        isOpen={isResetConfirmOpen}
+        onClose={() => setIsResetConfirmOpen(false)}
+        onConfirm={handleResetDb}
+        title="Reset Database?"
+        message="This will wipe all current updates and restore mock seed values. This action cannot be undone."
+        confirmText="Reset Database"
+        isDanger={true}
+      />
     </div>
   );
 };

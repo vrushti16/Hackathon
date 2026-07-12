@@ -7,26 +7,25 @@ import {
   Plus, 
   Edit, 
   Trash2, 
-  Search, 
-  SlidersHorizontal,
-  ChevronDown,
-  HelpCircle,
-  Car,
-  Layers,
-  MapPin,
+  Car, 
   RefreshCw,
   Trash
 } from 'lucide-react';
 import { useFleet } from '../context/FleetContext';
-import Table from '../components/common/Table';
-import Pagination from '../components/common/Pagination';
-import Modal from '../components/common/Modal';
-import ConfirmationDialog from '../components/common/ConfirmationDialog';
-import StatusBadge from '../components/common/StatusBadge';
-import SearchBar from '../components/common/SearchBar';
-import EmptyState from '../components/common/EmptyState';
-import Loader from '../components/common/Loader';
 import { formatCurrency } from '../utils/formatters';
+
+// UI components
+import PageHeader from '../components/ui/PageHeader';
+import FilterBar from '../components/ui/FilterBar';
+import Table from '../components/ui/Table';
+import Pagination from '../components/ui/Pagination';
+import Modal from '../components/ui/Modal';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import StatusBadge from '../components/ui/StatusBadge';
+import EmptyState from '../components/ui/EmptyState';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import Button from '../components/ui/Button';
 
 // Zod Validation Schema for CRUD operations
 const vehicleSchema = z.object({
@@ -43,7 +42,7 @@ const vehicleSchema = z.object({
 const VEHICLE_TYPES = ['Heavy Duty Truck', 'Electric Van', 'Cargo Van', 'Box Truck', 'Sedan', 'SUV'];
 const REGIONS = ['North America', 'West Coast', 'East Coast', 'South Region', 'Midwest', 'Europe'];
 
-const Vehicles = () => {
+const Vehicles = React.memo(() => {
   const { 
     vehicles, 
     loading, 
@@ -100,70 +99,78 @@ const Vehicles = () => {
     }
   });
 
-  // Load edit vehicle values into form
+  // Fetch vehicles once on mount
   useEffect(() => {
-    if (activeVehicle && isEditModalOpen) {
-      reset({
-        registrationNumber: activeVehicle.registrationNumber,
-        name: activeVehicle.name,
-        type: activeVehicle.type,
-        capacity: activeVehicle.capacity,
-        odometer: activeVehicle.odometer,
-        acquisitionCost: activeVehicle.acquisitionCost,
-        region: activeVehicle.region,
-        status: activeVehicle.status
-      });
+    fetchVehicles();
+  }, []);
+
+  // Autofill forms on edit trigger
+  useEffect(() => {
+    if (activeVehicle) {
+      setValue('registrationNumber', activeVehicle.registrationNumber || '');
+      setValue('name', activeVehicle.name || '');
+      setValue('type', activeVehicle.type || 'Cargo Van');
+      setValue('capacity', activeVehicle.capacity || '');
+      setValue('odometer', activeVehicle.odometer || 0);
+      setValue('acquisitionCost', activeVehicle.acquisitionCost || '');
+      setValue('region', activeVehicle.region || 'North America');
+      setValue('status', activeVehicle.status || 'Available');
     }
-  }, [activeVehicle, isEditModalOpen, reset]);
+  }, [activeVehicle, setValue]);
 
-  // Clean selections if page changes
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [searchQuery, localTypeFilter, localStatusFilter, localRegionFilter, currentPage]);
-
-  // --- Filtering & Sorting & Pagination Logic ---
+  // --- Filtering & Sorting & Paging Logic ---
 
   const filteredData = useMemo(() => {
     let result = [...vehicles];
 
-    // Apply text search on name or registration number
+    // 1. Text Search matching
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(
-        v => v.name.toLowerCase().includes(q) || v.registrationNumber.toLowerCase().includes(q)
+      result = result.filter(v => 
+        (v.name && v.name.toLowerCase().includes(q)) || 
+        (v.registrationNumber && v.registrationNumber.toLowerCase().includes(q))
       );
     }
 
-    // Apply drop filters
+    // 2. Dropdown type matching
     if (localTypeFilter !== 'All') {
       result = result.filter(v => v.type === localTypeFilter);
     }
+
+    // 3. Dropdown status matching
     if (localStatusFilter !== 'All') {
       result = result.filter(v => v.status === localStatusFilter);
     }
+
+    // 4. Dropdown region matching
     if (localRegionFilter !== 'All') {
       result = result.filter(v => v.region === localRegionFilter);
     }
 
-    // Apply Sorting
+    // 5. Apply sorting
     result.sort((a, b) => {
-      let valA = a[sortKey];
-      let valB = b[sortKey];
+      const fieldA = a[sortKey];
+      const fieldB = b[sortKey];
 
-      if (typeof valA === 'string') {
-        valA = valA.toLowerCase();
-        valB = valB.toLowerCase();
+      if (fieldA === undefined || fieldB === undefined) return 0;
+
+      if (typeof fieldA === 'number' && typeof fieldB === 'number') {
+        return sortOrder === 'asc' ? fieldA - fieldB : fieldB - fieldA;
       }
 
-      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
-      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+      const strA = String(fieldA).toLowerCase();
+      const strB = String(fieldB).toLowerCase();
+
+      if (strA < strB) return sortOrder === 'asc' ? -1 : 1;
+      if (strA > strB) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
 
     return result;
   }, [vehicles, searchQuery, localTypeFilter, localStatusFilter, localRegionFilter, sortKey, sortOrder]);
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  // Page slice calculations
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
   const pagedData = useMemo(() => {
     const startIdx = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(startIdx, startIdx + itemsPerPage);
@@ -172,10 +179,9 @@ const Vehicles = () => {
   const handleSort = (key, order) => {
     setSortKey(key);
     setSortOrder(order);
-    setCurrentPage(1);
   };
 
-  // --- Row Selections ---
+  // --- Row Checkbox selections ---
 
   const handleSelectAll = () => {
     const pageIds = pagedData.map(v => v.id);
@@ -344,19 +350,14 @@ const Vehicles = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       
       {/* Page Title & Add Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-brand-slate-900 dark:text-white font-display">
-            Vehicles Inventory
-          </h2>
-          <p className="text-xs text-brand-slate-500 dark:text-brand-slate-400">
-            Monitor, edit, and expand TransitOps fleet assets.
-          </p>
-        </div>
-        <button
+      <PageHeader
+        title="Vehicles Inventory"
+        subtitle="Monitor, edit, and expand TransitOps fleet assets."
+      >
+        <Button
           onClick={() => {
             reset({
               registrationNumber: '',
@@ -371,108 +372,104 @@ const Vehicles = () => {
             setFormError('');
             setIsAddModalOpen(true);
           }}
-          type="button"
-          className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 text-sm font-semibold text-white bg-brand-blue hover:bg-brand-blue-hover rounded-xl shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer"
+          icon={Plus}
+          variant="primary"
         >
-          <Plus className="w-4 h-4" />
-          <span>Add Vehicle</span>
-        </button>
-      </div>
+          Add Vehicle
+        </Button>
+      </PageHeader>
 
       {/* Search and Filters panel */}
-      <div className="flex flex-col gap-4 p-4 rounded-2xl glass-panel">
-        <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
-          
-          {/* Search bar component */}
-          <SearchBar
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            onClear={() => setSearchQuery('')}
-            placeholder="Search by name or registration..."
-          />
-
-          {/* Quick Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            
-            {/* Filter by Type */}
-            <select
-              value={localTypeFilter}
-              onChange={(e) => {
-                setLocalTypeFilter(e.target.value);
+      <FilterBar
+        searchVal={searchQuery}
+        onSearchChange={(e) => {
+          setSearchQuery(e.target.value);
+          setCurrentPage(1);
+        }}
+        searchPlaceholder="Search by name or registration..."
+        onReset={
+          searchQuery || localTypeFilter !== 'All' || localStatusFilter !== 'All' || localRegionFilter !== 'All'
+            ? () => {
+                setSearchQuery('');
+                setLocalTypeFilter('All');
+                setLocalStatusFilter('All');
+                setLocalRegionFilter('All');
                 setCurrentPage(1);
-              }}
-              className="px-3 py-2 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none cursor-pointer"
-            >
-              <option value="All">All Types</option>
-              {VEHICLE_TYPES.map(t => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+              }
+            : null
+        }
+      >
+        {/* Filter by Type */}
+        <select
+          value={localTypeFilter}
+          onChange={(e) => {
+            setLocalTypeFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none cursor-pointer"
+        >
+          <option value="All">All Types</option>
+          {VEHICLE_TYPES.map(t => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
 
-            {/* Filter by Status */}
-            <select
-              value={localStatusFilter}
-              onChange={(e) => {
-                setLocalStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="px-3 py-2 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none cursor-pointer"
-            >
-              <option value="All">All Statuses</option>
-              <option value="Available">Available</option>
-              <option value="Active">Active</option>
-              <option value="In Shop">In Shop</option>
-            </select>
+        {/* Filter by Status */}
+        <select
+          value={localStatusFilter}
+          onChange={(e) => {
+            setLocalStatusFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none cursor-pointer"
+        >
+          <option value="All">All Statuses</option>
+          <option value="Available">Available</option>
+          <option value="Active">Active</option>
+          <option value="In Shop">In Shop</option>
+        </select>
 
-            {/* Filter by Region */}
-            <select
-              value={localRegionFilter}
-              onChange={(e) => {
-                setLocalRegionFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="px-3 py-2 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none cursor-pointer"
-            >
-              <option value="All">All Regions</option>
-              {REGIONS.map(r => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
+        {/* Filter by Region */}
+        <select
+          value={localRegionFilter}
+          onChange={(e) => {
+            setLocalRegionFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none cursor-pointer"
+        >
+          <option value="All">All Regions</option>
+          {REGIONS.map(r => (
+            <option key={r} value={r}>{r}</option>
+          ))}
+        </select>
 
-            {/* Force Reload API list */}
-            <button
-              onClick={fetchVehicles}
-              disabled={loading.vehicles}
-              type="button"
-              className="p-2 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 text-brand-slate-500 dark:text-brand-slate-400 hover:text-brand-blue hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900 disabled:opacity-50 transition-colors cursor-pointer"
-              title="Force Refresh Data"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading.vehicles ? 'animate-spin' : ''}`} />
-            </button>
+        {/* Force Refresh */}
+        <Button
+          onClick={fetchVehicles}
+          disabled={loading.vehicles}
+          variant="outline"
+          size="sm"
+          icon={RefreshCw}
+        />
+      </FilterBar>
 
-          </div>
+      {/* Selected Rows Banner for Bulk Actions */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between p-3 rounded-xl bg-brand-red/5 border border-brand-red/20 animate-fade-in">
+          <span className="text-xs font-semibold text-brand-red">
+            {selectedIds.length} vehicle(s) selected
+          </span>
+          <Button
+            onClick={() => setIsConfirmBulkDeleteOpen(true)}
+            variant="danger"
+            size="sm"
+            icon={Trash}
+          >
+            Bulk Remove
+          </Button>
         </div>
-
-        {/* Selected Rows Banner for Bulk Actions */}
-        {selectedIds.length > 0 && (
-          <div className="flex items-center justify-between p-3 rounded-xl bg-brand-red/5 border border-brand-red/20 animate-fade-in">
-            <span className="text-xs font-semibold text-brand-red">
-              {selectedIds.length} vehicle(s) selected
-            </span>
-            <button
-              onClick={() => setIsConfirmBulkDeleteOpen(true)}
-              type="button"
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-brand-red hover:bg-brand-red/90 transition-colors cursor-pointer"
-            >
-              <Trash className="w-3.5 h-3.5" />
-              <span>Bulk Remove</span>
-            </button>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Main Table view */}
       <Table
@@ -487,8 +484,7 @@ const Vehicles = () => {
         isLoading={loading.vehicles}
         emptyState={
           <EmptyState
-            title="No vehicles found"
-            description="We couldn't find any vehicles matching your requirements. Feel free to add a new asset to the inventory list."
+            type="vehicles"
             actionText="Clear Filters"
             onActionClick={() => {
               setSearchQuery('');
@@ -523,141 +519,99 @@ const Vehicles = () => {
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Registration */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Registration Number</label>
-              <input
-                type="text"
-                placeholder="TX-9087-A"
-                {...register('registrationNumber')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.registrationNumber ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.registrationNumber && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.registrationNumber.message}</p>
-              )}
-            </div>
+            <Input
+              label="Registration Number"
+              id="registrationNumber"
+              placeholder="TX-9087-A"
+              {...register('registrationNumber')}
+              error={errors.registrationNumber?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Name */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Vehicle Name</label>
-              <input
-                type="text"
-                placeholder="Freightliner Cascadia"
-                {...register('name')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.name ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.name && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.name.message}</p>
-              )}
-            </div>
+            <Input
+              label="Vehicle Name"
+              id="name"
+              placeholder="Freightliner Cascadia"
+              {...register('name')}
+              error={errors.name?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Type */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Vehicle Type</label>
-              <select
-                {...register('type')}
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
-              >
-                {VEHICLE_TYPES.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="Vehicle Type"
+              id="type"
+              options={VEHICLE_TYPES}
+              placeholder={null}
+              {...register('type')}
+              error={errors.type?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Region */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Operating Region</label>
-              <select
-                {...register('region')}
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
-              >
-                {REGIONS.map(r => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="Operating Region"
+              id="region"
+              options={REGIONS}
+              placeholder={null}
+              {...register('region')}
+              error={errors.region?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Capacity */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Maximum Capacity (kg)</label>
-              <input
-                type="number"
-                placeholder="25000"
-                {...register('capacity')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.capacity ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.capacity && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.capacity.message}</p>
-              )}
-            </div>
+            <Input
+              label="Maximum Capacity (kg)"
+              id="capacity"
+              type="number"
+              placeholder="25000"
+              {...register('capacity')}
+              error={errors.capacity?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Odometer */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Current Odometer (mi)</label>
-              <input
-                type="number"
-                placeholder="12000"
-                {...register('odometer')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.odometer ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.odometer && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.odometer.message}</p>
-              )}
-            </div>
+            <Input
+              label="Current Odometer (mi)"
+              id="odometer"
+              type="number"
+              placeholder="12000"
+              {...register('odometer')}
+              error={errors.odometer?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Cost */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Acquisition Cost (₹)</label>
-              <input
-                type="number"
-                placeholder="85000"
-                {...register('acquisitionCost')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.acquisitionCost ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.acquisitionCost && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.acquisitionCost.message}</p>
-              )}
-            </div>
+            <Input
+              label="Acquisition Cost (₹)"
+              id="acquisitionCost"
+              type="number"
+              placeholder="85000"
+              {...register('acquisitionCost')}
+              error={errors.acquisitionCost?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Initial Status */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Initial Status</label>
-              <select
-                {...register('status')}
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
-              >
-                <option value="Available">Available</option>
-                <option value="Active">Active</option>
-                <option value="In Shop">In Shop</option>
-              </select>
-            </div>
+            <Select
+              label="Initial Status"
+              id="status"
+              options={['Available', 'Active', 'In Shop']}
+              placeholder={null}
+              {...register('status')}
+              error={errors.status?.message}
+              className="col-span-2 sm:col-span-1"
+            />
           </div>
 
           <div className="flex items-center justify-end space-x-3 pt-4 border-t border-brand-slate-100 dark:border-brand-slate-900">
-            <button
+            <Button
               onClick={() => setIsAddModalOpen(false)}
-              type="button"
-              className="py-2 px-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 text-xs font-semibold text-brand-slate-600 dark:text-brand-slate-400 hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900 transition-colors"
+              variant="secondary"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={submitting}
-              className="py-2 px-4 rounded-xl text-xs font-semibold text-white bg-brand-blue hover:bg-brand-blue-hover disabled:opacity-50 transition-colors cursor-pointer"
+              loading={submitting}
+              variant="primary"
             >
-              {submitting ? 'Creating...' : 'Save Asset'}
-            </button>
+              Save Asset
+            </Button>
           </div>
         </form>
       </Modal>
@@ -679,145 +633,103 @@ const Vehicles = () => {
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Registration */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Registration Number</label>
-              <input
-                type="text"
-                {...register('registrationNumber')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.registrationNumber ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.registrationNumber && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.registrationNumber.message}</p>
-              )}
-            </div>
+            <Input
+              label="Registration Number"
+              id="edit-registrationNumber"
+              {...register('registrationNumber')}
+              error={errors.registrationNumber?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Name */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Vehicle Name</label>
-              <input
-                type="text"
-                {...register('name')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.name ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.name && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.name.message}</p>
-              )}
-            </div>
+            <Input
+              label="Vehicle Name"
+              id="edit-name"
+              {...register('name')}
+              error={errors.name?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Type */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Vehicle Type</label>
-              <select
-                {...register('type')}
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
-              >
-                {VEHICLE_TYPES.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="Vehicle Type"
+              id="edit-type"
+              options={VEHICLE_TYPES}
+              placeholder={null}
+              {...register('type')}
+              error={errors.type?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Region */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Operating Region</label>
-              <select
-                {...register('region')}
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
-              >
-                {REGIONS.map(r => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="Operating Region"
+              id="edit-region"
+              options={REGIONS}
+              placeholder={null}
+              {...register('region')}
+              error={errors.region?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Capacity */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Maximum Capacity (kg)</label>
-              <input
-                type="number"
-                {...register('capacity')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.capacity ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.capacity && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.capacity.message}</p>
-              )}
-            </div>
+            <Input
+              label="Maximum Capacity (kg)"
+              id="edit-capacity"
+              type="number"
+              {...register('capacity')}
+              error={errors.capacity?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Odometer */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Current Odometer (mi)</label>
-              <input
-                type="number"
-                {...register('odometer')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.odometer ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.odometer && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.odometer.message}</p>
-              )}
-            </div>
+            <Input
+              label="Current Odometer (mi)"
+              id="edit-odometer"
+              type="number"
+              {...register('odometer')}
+              error={errors.odometer?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Cost */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Acquisition Cost (₹)</label>
-              <input
-                type="number"
-                {...register('acquisitionCost')}
-                className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                  errors.acquisitionCost ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                }`}
-              />
-              {errors.acquisitionCost && (
-                <p className="text-[10px] text-brand-red font-semibold">{errors.acquisitionCost.message}</p>
-              )}
-            </div>
+            <Input
+              label="Acquisition Cost (₹)"
+              id="edit-acquisitionCost"
+              type="number"
+              {...register('acquisitionCost')}
+              error={errors.acquisitionCost?.message}
+              className="col-span-2 sm:col-span-1"
+            />
 
-            {/* Status */}
-            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-              <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Vehicle Status</label>
-              <select
-                {...register('status')}
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-transparent text-brand-slate-700 dark:text-brand-slate-350 focus:outline-none focus:ring-1 focus:ring-brand-blue cursor-pointer"
-              >
-                <option value="Available">Available</option>
-                <option value="Active">Active</option>
-                <option value="In Shop">In Shop</option>
-              </select>
-            </div>
+            <Select
+              label="Vehicle Status"
+              id="edit-status"
+              options={['Available', 'Active', 'In Shop']}
+              placeholder={null}
+              {...register('status')}
+              error={errors.status?.message}
+              className="col-span-2 sm:col-span-1"
+            />
           </div>
 
           <div className="flex items-center justify-end space-x-3 pt-4 border-t border-brand-slate-100 dark:border-brand-slate-900">
-            <button
+            <Button
               onClick={() => {
                 setIsEditModalOpen(false);
                 setActiveVehicle(null);
               }}
-              type="button"
-              className="py-2 px-4 rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 text-xs font-semibold text-brand-slate-600 dark:text-brand-slate-400 hover:bg-brand-slate-50 dark:hover:bg-brand-slate-900 transition-colors"
+              variant="secondary"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={submitting}
-              className="py-2 px-4 rounded-xl text-xs font-semibold text-white bg-brand-blue hover:bg-brand-blue-hover disabled:opacity-50 transition-colors cursor-pointer"
+              loading={submitting}
+              variant="primary"
             >
-              {submitting ? 'Updating...' : 'Save Changes'}
-            </button>
+              Save Changes
+            </Button>
           </div>
         </form>
       </Modal>
 
       {/* --- SINGLE DELETE CONFIRMATION --- */}
-      <ConfirmationDialog
+      <ConfirmDialog
         isOpen={isConfirmDeleteOpen}
         onClose={() => {
           setIsConfirmDeleteOpen(false);
@@ -826,19 +738,23 @@ const Vehicles = () => {
         onConfirm={handleConfirmSingleDelete}
         title="Remove Fleet Asset"
         message="Are you sure you want to permanently delete this vehicle from the inventory? This will also clear all active maintenance orders associated with it."
+        confirmText="Remove Asset"
+        isDanger={true}
       />
 
       {/* --- BULK DELETE CONFIRMATION --- */}
-      <ConfirmationDialog
+      <ConfirmDialog
         isOpen={isConfirmBulkDeleteOpen}
         onClose={() => setIsConfirmBulkDeleteOpen(false)}
         onConfirm={handleConfirmBulkDelete}
         title="Remove Selected Assets"
         message={`Are you sure you want to permanently delete these ${selectedIds.length} selected vehicles from the inventory? This action is irreversible.`}
+        confirmText="Remove Selected"
+        isDanger={true}
       />
 
     </div>
   );
-};
+});
 
 export default Vehicles;

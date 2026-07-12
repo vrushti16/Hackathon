@@ -1,4 +1,4 @@
-// Modal.jsx - Reusable modal overlay component
+// Modal.jsx - Reusable accessible overlay modal dialog component
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 
@@ -7,7 +7,8 @@ const Modal = ({
   onClose,
   title,
   children,
-  size = 'md'
+  size = 'md',
+  className = ''
 }) => {
   useEffect(() => {
     const handleEscape = (e) => {
@@ -41,27 +42,28 @@ const Modal = ({
       
       {/* Modal Wrapper Card */}
       <div 
-        className={`w-[95%] md:w-[80%] lg:w-full ${sizeClasses[size]} glass-modal rounded-2xl relative z-10 flex flex-col max-h-[90vh] shadow-2xl animate-scale-in`}
+        className={`w-full ${sizeClasses[size]} glass-modal rounded-2xl relative z-10 flex flex-col max-h-[90vh] shadow-2xl animate-scale-in focus-visible:outline-none ${className}`}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
+        tabIndex="-1"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-brand-slate-100 dark:border-brand-slate-900">
-          <h3 id="modal-title" className="text-lg font-bold text-brand-slate-900 dark:text-white font-display">
+          <h3 className="text-base font-bold text-brand-slate-900 dark:text-white font-display">
             {title}
           </h3>
           <button
             onClick={onClose}
             type="button"
-            className="p-1 rounded-xl text-brand-slate-400 dark:text-brand-slate-500 hover:text-brand-slate-600 dark:hover:text-brand-slate-300 hover:bg-brand-slate-100 dark:hover:bg-brand-slate-900 transition-colors focus:outline-none"
+            className="p-1 rounded-xl text-brand-slate-400 dark:text-brand-slate-500 hover:text-brand-slate-600 dark:hover:text-brand-slate-300 hover:bg-brand-slate-100 dark:hover:bg-brand-slate-900 transition-colors focus:outline-none focus:ring-1 focus:ring-brand-blue/30 cursor-pointer"
+            aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto flex-1 text-sm text-brand-slate-600 dark:text-brand-slate-350">
+        <div className="p-6 overflow-y-auto flex-1 text-xs text-brand-slate-600 dark:text-brand-slate-300 scrollbar">
           {children}
         </div>
       </div>
