@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Download, FileText, Table, Printer, ChevronDown } from 'lucide-react';
 import Button from '../ui/Button';
 import { useFleet } from '../../context/FleetContext';
+import api from '../../services/api';
 
-const ReportExportMenu = ({ onExportCsv, isExportingCsv }) => {
+const ReportExportMenu = ({ onExportCsv, isExportingCsv, filters }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const { triggerToast } = useFleet();
@@ -24,10 +25,23 @@ const ReportExportMenu = ({ onExportCsv, isExportingCsv }) => {
     setExportingPdf(true);
     triggerToast('Generating PDF report...', 'info');
     
-    // TODO: Implement backend endpoint for PDF export
-    // Currently simulating export progress
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const params = new URLSearchParams();
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value) params.append(key, value);
+        });
+      }
+      const response = await api.get(`/reports/export/pdf?${params.toString()}`, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'TransitOps_Filtered_Report.pdf';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
       triggerToast('PDF export completed', 'success');
     } catch (err) {
       triggerToast('Failed to export PDF', 'danger');

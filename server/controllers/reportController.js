@@ -11,6 +11,41 @@ const safeDiv = (num, den) => {
   return isFinite(res) ? Math.round(res * 100) / 100 : 0;
 };
 
+// Build Date Filter for Reports
+const buildDateFilter = (filterType, customStart, customEnd, dateField = 'createdAt') => {
+  const filter = {};
+  let start = null;
+  let end = null;
+  const now = new Date();
+
+  if (filterType === 'today') {
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  } else if (filterType === '7d') {
+    start = new Date(now);
+    start.setDate(now.getDate() - 7);
+  } else if (filterType === '30d') {
+    start = new Date(now);
+    start.setDate(now.getDate() - 30);
+  } else if (filterType === 'this_month') {
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  } else if (filterType === 'this_year') {
+    start = new Date(now.getFullYear(), 0, 1);
+    end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+  } else if (filterType === 'custom' && (customStart || customEnd)) {
+    if (customStart) start = new Date(customStart);
+    if (customEnd) end = new Date(customEnd);
+  }
+
+  if (start || end) {
+    filter[dateField] = {};
+    if (start) filter[dateField].$gte = start;
+    if (end) filter[dateField].$lte = end;
+  }
+  return filter;
+};
+
 // GET /api/reports/dashboard
 const getDashboardMetrics = async (req, res) => {
   try {
@@ -114,14 +149,31 @@ const getDashboardMetrics = async (req, res) => {
 };
 
 // Common ROI calculator logic helper
-const calculateRoiData = async () => {
-  const vehicles = await Vehicle.find();
+const calculateRoiData = async (query = {}) => {
+  const { quickRange, startDate, endDate, vehicleId, driverId, tripStatus, expenseCategory } = query;
+  
+  const vehicleMatch = {};
+  if (vehicleId) vehicleMatch._id = vehicleId;
+  const vehicles = await Vehicle.find(vehicleMatch);
+
+  const tripDateFilter = buildDateFilter(quickRange, startDate, endDate, 'completedAt');
+  const expenseDateFilter = buildDateFilter(quickRange, startDate, endDate, 'date');
+
   const roiReport = [];
 
   for (const v of vehicles) {
     // Completed trip stats
+    const tripMatch = { vehicle: v._id, status: tripStatus || 'Completed', ...tripDateFilter };
+    if (driverId) {
+      // Driver IDs might come as strings
+      const mongoose = require('mongoose');
+      if (mongoose.Types.ObjectId.isValid(driverId)) {
+        tripMatch.driver = new mongoose.Types.ObjectId(driverId);
+      }
+    }
+
     const tripStats = await Trip.aggregate([
-      { $match: { vehicle: v._id, status: 'Completed' } },
+      { $match: tripMatch },
       {
         $group: {
           _id: null,
@@ -137,7 +189,10 @@ const calculateRoiData = async () => {
     const fuel = tripStats[0]?.fuel || 0;
 
     // Expense stats
-    const expenses = await Expense.find({ vehicle: v._id });
+    const expenseMatch = { vehicle: v._id, ...expenseDateFilter };
+    if (expenseCategory) expenseMatch.category = expenseCategory;
+
+    const expenses = await Expense.find(expenseMatch);
     let fuelExpenses = 0;
     let maintenanceExpenses = 0;
     let otherExpenses = 0;
@@ -179,7 +234,7 @@ const calculateRoiData = async () => {
 // GET /api/reports/roi
 const getVehicleRoi = async (req, res) => {
   try {
-    const roiReport = await calculateRoiData();
+    const roiReport = await calculateRoiData(req.query);
     return res.status(200).json(roiReport);
   } catch (error) {
     console.error('ROI report error:', error.message);
@@ -190,7 +245,7 @@ const getVehicleRoi = async (req, res) => {
 // GET /api/reports/export/csv
 const exportRoiCsv = async (req, res) => {
   try {
-    const data = await calculateRoiData();
+    const data = await calculateRoiData(req.query);
     
     // Create CSV Header
     let csvContent = 'Registration Number,Model,Acquisition Cost (INR),Trip Revenue (INR),Fuel Expenses (INR),Maintenance Expenses (INR),Other Expenses (INR),Total Expenses (INR),Net Profit (INR),ROI (%),Completed Distance (km),Fuel Consumed (L),Fuel Efficiency (km/L),Cost Per km (INR/km)\n';
@@ -209,31 +264,7 @@ const exportRoiCsv = async (req, res) => {
   }
 };
 
-// Remote developer functions preserved for compatibility
-const buildDateFilter = (filterType, customStart, customEnd, dateField = 'createdAt') => {
-  const filter = {};
-  let start = null;
-  let end = null;
-  const now = new Date();
-
-  if (filterType === 'today') {
-    start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-  } else if (filterType === 'this_month') {
-    start = new Date(now.getFullYear(), now.getMonth(), 1);
-    end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-  } else if (filterType === 'custom' && (customStart || customEnd)) {
-    if (customStart) start = new Date(customStart);
-    if (customEnd) end = new Date(customEnd);
-  }
-
-  if (start || end) {
-    filter[dateField] = {};
-    if (start) filter[dateField].$gte = start;
-    if (end) filter[dateField].$lte = end;
-  }
-  return filter;
-};
+// Old buildDateFilter removed because it was moved up
 
 const getReportMetricsInternal = async (query) => {
   const { filterType, startDate, endDate } = query;
@@ -559,10 +590,64 @@ const getTripSummaryReport = async (req, res) => {
   }
 };
 
+const exportRoiPdf = async (req, res) => {
+  try {
+    const PDFDocument = require('pdfkit');
+    const data = await calculateRoiData(req.query);
+
+    const doc = new PDFDocument({ margin: 50 });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="TransitOps_Filtered_Report.pdf"');
+
+    doc.pipe(res);
+
+    doc.fillColor('#1E293B').fontSize(22).text('TransitOps Analytics Report', { align: 'center' });
+    doc.fontSize(10).fillColor('#64748B').text(`Generated on: ${new Date().toLocaleString()}`, { align: 'center' });
+    doc.moveDown(2);
+
+    let totalRevenue = 0;
+    let totalExpenses = 0;
+    
+    data.forEach(v => {
+      totalRevenue += v.completedTripRevenue;
+      totalExpenses += v.totalExpenses;
+    });
+
+    const netProfit = totalRevenue - totalExpenses;
+
+    doc.fillColor('#0F172A').fontSize(14).text('Executive Summary (Filtered)', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(11).fillColor('#334155');
+    doc.text(`Total Vehicles Included: ${data.length}`);
+    doc.text(`Total Revenue: INR ${totalRevenue.toLocaleString()}`);
+    doc.text(`Total Expenses: INR ${totalExpenses.toLocaleString()}`);
+    doc.text(`Net Profit: INR ${netProfit.toLocaleString()}`);
+    doc.moveDown(2);
+
+    doc.fillColor('#0F172A').fontSize(14).text('Vehicle Performance Reports', { underline: true });
+    doc.moveDown(0.5);
+    data.forEach(v => {
+      doc.fontSize(11).fillColor('#1E293B').text(`Vehicle: ${v.registrationNumber} (${v.model})`);
+      doc.fontSize(10).fillColor('#475569');
+      doc.text(`  • Distance: ${v.totalCompletedDistance} km  |  Efficiency: ${v.averageFuelEfficiency} km/L`);
+      doc.text(`  • Revenue: INR ${v.completedTripRevenue.toLocaleString()}  |  Cost: INR ${v.totalExpenses.toLocaleString()}  |  Profit: INR ${v.netProfit.toLocaleString()}`);
+      doc.text(`  • Vehicle ROI: ${v.roiPercentage}%  |  Operational Cost/km: INR ${v.costPerKilometer}`);
+      doc.moveDown(0.8);
+    });
+
+    doc.end();
+  } catch (error) {
+    console.error('Export PDF error:', error.message);
+    return res.status(500).json({ message: 'Server error while exporting PDF.' });
+  }
+};
+
 module.exports = {
   getDashboardMetrics,
   getVehicleRoi,
   exportRoiCsv,
+  exportRoiPdf,
   getReportMetrics,
   exportReportCSV,
   exportReportPDF,

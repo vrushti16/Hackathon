@@ -4,6 +4,7 @@ const {
   getDashboardMetrics,
   getVehicleRoi,
   exportRoiCsv,
+  exportRoiPdf,
   getReportMetrics,
   exportReportPDF,
   getFuelEfficiencyReport,
@@ -27,6 +28,6 @@ router.get('/trip-summary', protectRoute, authorizeRoles('Admin', 'Fleet Manager
 
 // Keep remote endpoints for compatibility
 router.get('/metrics', protectRoute, getReportMetrics);
-router.get('/export/pdf', exportReportPDF);
+router.get('/export/pdf', protectRoute, authorizeRoles('Admin', 'Financial Analyst'), exportRoiPdf);
 
 module.exports = router;

@@ -43,12 +43,14 @@ const Reports = () => {
   const fetchReportData = useCallback(async () => {
     setLoading(true);
     try {
-      // Simulate API call with current filters
-      // We keep the existing /reports/roi endpoint logic but expand the mock data presentation
-      const response = await api.get('/reports/roi');
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+
+      const response = await api.get(`/reports/roi?${params.toString()}`);
       const roiData = Array.isArray(response.data) ? response.data : [];
 
-      const totalAcquisition = roiData.reduce((sum, v) => sum + v.acquisitionCost, 0);
       const totalRevenue = roiData.reduce((sum, v) => sum + v.completedTripRevenue, 0);
       const totalFuelExp = roiData.reduce((sum, v) => sum + v.fuelExpenses, 0);
       const totalMaintExp = roiData.reduce((sum, v) => sum + v.maintenanceExpenses, 0);
@@ -60,38 +62,34 @@ const Reports = () => {
       const fleetFuelEfficiency = totalFuelLiters > 0 ? (totalDistance / totalFuelLiters) : 0;
       const averageRoi = roiData.length > 0 ? (roiData.reduce((sum, v) => sum + v.roiPercentage, 0) / roiData.length) : 0;
 
-      // Filter simulation
-      const filteredVehicles = filters.vehicleId ? roiData.filter(v => v.registrationNumber === vehicles.find(vh => vh.id === filters.vehicleId)?.registrationNumber) : roiData;
-      const scaleFactor = filters.vehicleId ? 0.3 : 1;
-
-      // Mocking more complex analytics based on filters
+      // Real aggregated analytics
       const formatted = {
         cards: {
-          revenue: `₹${(totalRevenue * scaleFactor).toLocaleString()}`,
-          expenses: `₹${(totalExp * scaleFactor).toLocaleString()}`,
-          fuelCost: `₹${(totalFuelExp * scaleFactor).toLocaleString()}`,
-          maintenanceCost: `₹${(totalMaintExp * scaleFactor).toLocaleString()}`,
-          utilization: `${Math.round(85 * scaleFactor)}%`,
-          roiScore: `${(averageRoi * scaleFactor).toFixed(1)}%`,
+          revenue: `₹${totalRevenue.toLocaleString()}`,
+          expenses: `₹${totalExp.toLocaleString()}`,
+          fuelCost: `₹${totalFuelExp.toLocaleString()}`,
+          maintenanceCost: `₹${totalMaintExp.toLocaleString()}`,
+          utilization: `85%`, // Default simulation for now
+          roiScore: `${averageRoi.toFixed(1)}%`,
           fuelEfficiency: `${fleetFuelEfficiency.toFixed(1)} km/L`,
-          tripsCompleted: Math.round(145 * scaleFactor)
+          tripsCompleted: 145 // Default simulation for now
         },
         charts: {
           revenueTrend: [
-            { date: 'Mon', revenue: 4000 * scaleFactor, expenses: 2400 * scaleFactor },
-            { date: 'Tue', revenue: 3000 * scaleFactor, expenses: 1398 * scaleFactor },
-            { date: 'Wed', revenue: 2000 * scaleFactor, expenses: 9800 * scaleFactor },
-            { date: 'Thu', revenue: 2780 * scaleFactor, expenses: 3908 * scaleFactor },
-            { date: 'Fri', revenue: 1890 * scaleFactor, expenses: 4800 * scaleFactor },
-            { date: 'Sat', revenue: 2390 * scaleFactor, expenses: 3800 * scaleFactor },
-            { date: 'Sun', revenue: 3490 * scaleFactor, expenses: 4300 * scaleFactor },
+            { date: 'Mon', revenue: 4000, expenses: 2400 },
+            { date: 'Tue', revenue: 3000, expenses: 1398 },
+            { date: 'Wed', revenue: 2000, expenses: 9800 },
+            { date: 'Thu', revenue: 2780, expenses: 3908 },
+            { date: 'Fri', revenue: 1890, expenses: 4800 },
+            { date: 'Sat', revenue: 2390, expenses: 3800 },
+            { date: 'Sun', revenue: 3490, expenses: 4300 },
           ],
           expenseBreakdown: [
-            { name: 'Fuel', value: totalFuelExp * scaleFactor, color: '#2563EB' },
-            { name: 'Maintenance', value: totalMaintExp * scaleFactor, color: '#F97316' },
-            { name: 'Other', value: totalOtherExp * scaleFactor, color: '#A855F7' }
+            { name: 'Fuel', value: totalFuelExp, color: '#2563EB' },
+            { name: 'Maintenance', value: totalMaintExp, color: '#F97316' },
+            { name: 'Other', value: totalOtherExp, color: '#A855F7' }
           ],
-          fuelEfficiencyData: filteredVehicles.map(v => ({
+          fuelEfficiencyData: roiData.map(v => ({
             name: v.registrationNumber,
             efficiency: v.averageFuelEfficiency
           })),
@@ -115,7 +113,7 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters, vehicles, triggerToast]);
+  }, [filters, triggerToast]);
 
   useEffect(() => {
     fetchReportData();
@@ -142,7 +140,11 @@ const Reports = () => {
     setExportingCsv(true);
     triggerToast('Generating CSV report...', 'info');
     try {
-      const response = await api.get('/reports/export/csv', { responseType: 'blob' });
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+      const response = await api.get(`/reports/export/csv?${params.toString()}`, { responseType: 'blob' });
       const blob = new Blob([response.data], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -182,6 +184,7 @@ const Reports = () => {
         <ReportExportMenu 
           onExportCsv={handleExportCSV} 
           isExportingCsv={exportingCsv} 
+          filters={filters}
         />
       </PageHeader>
 
