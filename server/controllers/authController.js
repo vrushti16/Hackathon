@@ -258,6 +258,16 @@ const updatePassword = async (req, res) => {
       return res.status(400).json({ message: 'New password cannot be the same as current password.' });
     }
 
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'New password must be at least 8 characters long.' });
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      return res.status(400).json({ message: 'New password must contain at least one uppercase letter.' });
+    }
+    if (!/[^a-zA-Z0-9]/.test(newPassword)) {
+      return res.status(400).json({ message: 'New password must contain at least one special character.' });
+    }
+
     // Explicitly select the password hash
     const user = await User.findById(req.user.id).select('+password');
     if (!user) {
