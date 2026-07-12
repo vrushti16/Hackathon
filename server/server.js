@@ -3,8 +3,19 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+if (!process.env.MONGO_URI) {
+  console.error('Missing MONGO_URI in server/.env. Copy .env.example to .env and set your MongoDB connection string.');
+  process.exit(1);
+}
+
+if (!process.env.JWT_SECRET) {
+  console.error('Missing JWT_SECRET in server/.env. Copy .env.example to .env and set your JWT secret.');
+  process.exit(1);
+}
+
 const authRoute = require('./routes/authRoute');
 const vehicleRoute = require('./routes/vehicleRoute');
+const driverRoute = require('./routes/driverRoute');
 const maintenanceRoute = require('./routes/maintenanceRoute');
 
 const app = express();
@@ -17,10 +28,17 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoute);
 app.use('/api/vehicles', vehicleRoute);
+app.use('/api/drivers', driverRoute);
 app.use('/api/maintenance', maintenanceRoute);
 
-
-
+// Health check route
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'TransitOps server is active and connected to MongoDB Atlas.',
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
+  });
+});
 
 // MongoDB Connection
 const connectDB = async () => {
@@ -40,11 +58,3 @@ connectDB().then(() => {
   });
 });
 
-// Health check route
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    message: 'TransitOps server is active and connected to MongoDB Atlas.',
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
-  });
-});

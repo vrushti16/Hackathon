@@ -17,7 +17,10 @@ const sleep = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
 api.defaults.adapter = async (config) => {
   await sleep(600); // Simulate network latency
 
-  const { url, method, data, headers } = config;
+  let { url, method, data, headers } = config;
+  if (config.baseURL && !url.startsWith(config.baseURL) && !url.startsWith('http')) {
+    url = `${config.baseURL.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
+  }
   const body = data ? JSON.parse(data) : null;
   const authHeader = headers['Authorization'] || headers['authorization'];
   
