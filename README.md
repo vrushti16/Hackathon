@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🚚 TransitOps: Smart Transport Operations Platform
 ### *Enterprise Fleet & Logistics Ecosystem • MERN + JWT/RBAC + Nodemailer + Chart.js/Recharts*
 **Documentation Version:** 1.0 (Cumulative Technical Dossier)
@@ -427,3 +428,4 @@ To verify system logic and validation constraints, TransitOps implements the fol
 
 ---
 *Manual v1.0 • Technical Dossier for TransitOps Smart Transport Operations Platform • 2026 🚛*
+
