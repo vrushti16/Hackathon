@@ -20,7 +20,7 @@ router.get('/expired', protectRoute, authorizeRoles('Safety Officer', 'Admin'), 
 router.get('/expiring', protectRoute, authorizeRoles('Safety Officer', 'Admin'), getExpiringDrivers);
 
 router.route('/')
-  .get(protectRoute, authorizeRoles('Safety Officer', 'Fleet Manager', 'Admin'), getAllDrivers)
+  .get(protectRoute, getAllDrivers)
   .post(protectRoute, authorizeRoles('Safety Officer', 'Admin'), createDriver);
 
 router.route('/:id')
