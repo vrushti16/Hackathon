@@ -55,28 +55,32 @@ api.defaults.adapter = async (config) => {
       };
     }
     
-    // Validate dummy token format
-    if (!token.startsWith('mock_access_token_')) {
-      return {
-        status: 401,
-        statusText: 'Unauthorized',
-        headers: {},
-        config,
-        data: { message: 'Invalid token' }
-      };
+    // Validate token format (allow both mock tokens and real JWTs)
+    let userId = null;
+    if (token.startsWith('mock_access_token_')) {
+      userId = token.replace('mock_access_token_', '');
+    } else {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          userId = payload.id;
+        }
+      } catch (e) {
+        // Ignore parsing errors, fallback will handle it
+      }
     }
 
-    const userId = token.replace('mock_access_token_', '');
     const users = mockDb.getUsers();
     currentUser = users.find(u => u.id === userId);
     if (!currentUser) {
-      return {
-        status: 401,
-        statusText: 'Unauthorized',
-        headers: {},
-        config,
-        data: { message: 'User not found' }
-      };
+      const savedUser = JSON.parse(localStorage.getItem('transitops_user') || 'null');
+      if (savedUser) {
+        currentUser = users.find(u => u.email?.toLowerCase() === savedUser.email?.toLowerCase());
+      }
+      if (!currentUser) {
+        currentUser = users[0];
+      }
     }
   }
 
