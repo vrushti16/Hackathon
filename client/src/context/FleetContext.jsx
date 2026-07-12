@@ -55,7 +55,7 @@ export const FleetProvider = ({ children }) => {
   const fetchDashboardMetrics = useCallback(async () => {
     setLoading(prev => ({ ...prev, dashboard: true }));
     try {
-      const response = await api.get('/dashboard/metrics');
+      const response = await api.get('/reports/dashboard');
       setDashboardMetrics(response.data);
     } catch (err) {
       triggerToast(err.message || 'Failed to load dashboard metrics', 'danger');
