@@ -17,16 +17,8 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import DriverCard from '../../components/driver/DriverCard';
 
-const initialDrivers = [
-  { id: 'd-1', name: 'Maya Chen', licenseNumber: 'DL-4021', category: 'Class A', expiryDate: '2026-09-12', contact: '+1 415 555 0188', safetyScore: 92, status: 'Available' },
-  { id: 'd-2', name: 'Luis Ortega', licenseNumber: 'DL-2218', category: 'Class B', expiryDate: '2026-07-20', contact: '+1 310 555 0191', safetyScore: 78, status: 'On Trip' },
-  { id: 'd-3', name: 'Nina Patel', licenseNumber: 'DL-8810', category: 'Class A', expiryDate: '2026-05-04', contact: '+1 646 555 0144', safetyScore: 88, status: 'Suspended' },
-  { id: 'd-4', name: 'Owen Brooks', licenseNumber: 'DL-7765', category: 'Class C', expiryDate: '2026-11-10', contact: '+1 214 555 0112', safetyScore: 95, status: 'Off Duty' }
-];
-
 const DriversPage = React.memo(() => {
-  const [drivers, setDrivers] = useState(initialDrivers);
->>>>>>> 2044ef43bc5207cf1b773116aee16cb0184c66c4
+  const [drivers, setDrivers] = useState([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [selectedDriver, setSelectedDriver] = useState(null);
