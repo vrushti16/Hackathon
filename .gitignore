@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Dependencies
 node_modules/
 /client/node_modules/
@@ -18,20 +17,17 @@ client/.env
 /client/build/
 /server/dist/
 /server/build/
+dist
+dist-ssr
 
-# Logs
-=======
 # Logs
 logs
 *.log
->>>>>>> 6a69c9865e2fe45503c40ef9a0f6a958b47d45bc
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-<<<<<<< HEAD
-*.log
 
 # Diagnostic reports (Crashed processes)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
@@ -70,28 +66,15 @@ typedoc/
 # IDEs and Editors
 .idea/
 .vscode/
-=======
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
 .DS_Store
->>>>>>> 6a69c9865e2fe45503c40ef9a0f6a958b47d45bc
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-<<<<<<< HEAD
 
-# Operating System Files
-.DS_Store
-Thumbs.db
-=======
->>>>>>> 6a69c9865e2fe45503c40ef9a0f6a958b47d45bc
+# Nested redundant Hackathon folder
+Hackathon/
