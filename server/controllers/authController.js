@@ -145,9 +145,7 @@ const forgotPassword = async (req, res) => {
     }
 
     const otp = generateOtp();
-    const otpHash = await bcrypt.hash(otp, 10);
-
-    user.passwordResetOtp = otpHash;
+    user.passwordResetOtp = otp;
     user.passwordResetOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
 
@@ -170,12 +168,15 @@ const forgotPassword = async (req, res) => {
 const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
+    console.log('Verify OTP Request Body:', { email, otp });
 
     if (!email || !otp) {
       return res.status(400).json({ message: 'Please provide email and OTP.' });
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
+    console.log('User found:', user ? { email: user.email, hasOtp: !!user.passwordResetOtp, expires: user.passwordResetOtpExpires } : 'No User');
+    
     if (!user || !user.passwordResetOtp || !user.passwordResetOtpExpires) {
       return res.status(400).json({ message: 'Invalid or expired reset code.' });
     }
@@ -184,7 +185,9 @@ const verifyOtp = async (req, res) => {
       return res.status(400).json({ message: 'Reset code has expired. Please request a new one.' });
     }
 
-    const isOtpMatch = await bcrypt.compare(otp, user.passwordResetOtp);
+    const isOtpMatch = otp.toString().trim() === user.passwordResetOtp;
+    console.log('OTP Match Result:', isOtpMatch);
+    
     if (!isOtpMatch) {
       return res.status(400).json({ message: 'Invalid reset code.' });
     }
@@ -223,7 +226,7 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Reset code has expired. Please request a new one.' });
     }
 
-    const isOtpMatch = await bcrypt.compare(otp, user.passwordResetOtp);
+    const isOtpMatch = otp.toString().trim() === user.passwordResetOtp;
     if (!isOtpMatch) {
       return res.status(400).json({ message: 'Invalid reset code.' });
     }
