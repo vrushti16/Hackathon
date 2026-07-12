@@ -64,11 +64,11 @@ const TripModal = ({ isOpen, onClose, vehicles, drivers, onSubmit, defaultValues
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-semibold text-brand-slate-700">Vehicle</label>
-            <select {...register('vehicleId')} className="w-full rounded-xl border border-brand-slate-200 bg-white px-3 py-2.5 text-sm">
+            <label className="mb-1 block text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-300">Vehicle</label>
+            <select {...register('vehicleId')} className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
               <option value="">Select vehicle</option>
               {vehicles.map((vehicle) => (
-                <option value={vehicle.id} key={vehicle.id}>
+                <option value={vehicle.id} key={vehicle.id} className="bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white">
                   {vehicle.registrationNumber} • {vehicle.name}
                 </option>
               ))}
@@ -76,11 +76,11 @@ const TripModal = ({ isOpen, onClose, vehicles, drivers, onSubmit, defaultValues
             {errors.vehicleId && <p className="mt-1 text-xs text-brand-red">{errors.vehicleId.message}</p>}
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-brand-slate-700">Driver</label>
-            <select {...register('driverId')} className="w-full rounded-xl border border-brand-slate-200 bg-white px-3 py-2.5 text-sm">
+            <label className="mb-1 block text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-300">Driver</label>
+            <select {...register('driverId')} className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
               <option value="">Select driver</option>
               {drivers.map((driver) => (
-                <option value={driver.id} key={driver.id}>
+                <option value={driver.id} key={driver.id} className="bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white">
                   {driver.name} • {driver.licenseNumber}
                 </option>
               ))}
@@ -89,61 +89,61 @@ const TripModal = ({ isOpen, onClose, vehicles, drivers, onSubmit, defaultValues
           </div>
         </div>
 
-        <div className="rounded-2xl border border-brand-slate-200 bg-brand-slate-50/70 p-4">
+        <div className="rounded-2xl border border-brand-slate-200 dark:border-brand-slate-800 bg-brand-slate-50/70 dark:bg-brand-slate-900/40 p-4">
           <div className="grid gap-3 md:grid-cols-2">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-slate-400">Vehicle status</p>
-              <p className="mt-1 text-sm font-semibold text-brand-slate-800">{selectedVehicle?.status || 'Awaiting selection'}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-slate-400 dark:text-brand-slate-500">Vehicle status</p>
+              <p className="mt-1 text-sm font-semibold text-brand-slate-850 dark:text-white">{selectedVehicle?.status || 'Awaiting selection'}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-slate-400">Remaining capacity</p>
-              <p className="mt-1 text-sm font-semibold text-brand-slate-800">{selectedVehicle ? selectedVehicle.capacity - (watch('cargoWeight') || 0) : '—'} kg</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-slate-400 dark:text-brand-slate-500">Remaining capacity</p>
+              <p className="mt-1 text-sm font-semibold text-brand-slate-850 dark:text-white">{selectedVehicle ? selectedVehicle.capacity - (watch('cargoWeight') || 0) : '—'} kg</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-slate-400">Driver safety</p>
-              <p className="mt-1 text-sm font-semibold text-brand-slate-800">{selectedDriver?.safetyScore || '—'} / 100</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-slate-400 dark:text-brand-slate-500">Driver safety</p>
+              <p className="mt-1 text-sm font-semibold text-brand-slate-850 dark:text-white">{selectedDriver?.safetyScore || '—'} / 100</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-slate-400">License</p>
-              <p className="mt-1 text-sm font-semibold text-brand-slate-800">{selectedDriver ? (new Date(selectedDriver.expiryDate) < new Date() ? 'Expired' : 'Valid') : '—'}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-slate-400 dark:text-brand-slate-500">License</p>
+              <p className="mt-1 text-sm font-semibold text-brand-slate-850 dark:text-white">{selectedDriver ? (new Date(selectedDriver.expiryDate) < new Date() ? 'Expired' : 'Valid') : '—'}</p>
             </div>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-semibold text-brand-slate-700">Source</label>
-            <input {...register('source')} className="w-full rounded-xl border border-brand-slate-200 bg-white px-3 py-2.5 text-sm" />
+            <label className="mb-1 block text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-300">Source</label>
+            <input {...register('source')} className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue" />
             {errors.source && <p className="mt-1 text-xs text-brand-red">{errors.source.message}</p>}
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-brand-slate-700">Destination</label>
-            <input {...register('destination')} className="w-full rounded-xl border border-brand-slate-200 bg-white px-3 py-2.5 text-sm" />
+            <label className="mb-1 block text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-300">Destination</label>
+            <input {...register('destination')} className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue" />
             {errors.destination && <p className="mt-1 text-xs text-brand-red">{errors.destination.message}</p>}
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-brand-slate-700">Cargo Weight (kg)</label>
-            <input type="number" {...register('cargoWeight')} className="w-full rounded-xl border border-brand-slate-200 bg-white px-3 py-2.5 text-sm" />
+            <label className="mb-1 block text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-300">Cargo Weight (kg)</label>
+            <input type="number" {...register('cargoWeight')} className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue" />
             {errors.cargoWeight && <p className="mt-1 text-xs text-brand-red">{errors.cargoWeight.message}</p>}
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-brand-slate-700">Distance (km)</label>
-            <input type="number" {...register('distance')} className="w-full rounded-xl border border-brand-slate-200 bg-white px-3 py-2.5 text-sm" />
+            <label className="mb-1 block text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-300">Distance (km)</label>
+            <input type="number" {...register('distance')} className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue" />
             {errors.distance && <p className="mt-1 text-xs text-brand-red">{errors.distance.message}</p>}
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-brand-slate-700">Revenue ($)</label>
-            <input type="number" {...register('revenue')} className="w-full rounded-xl border border-brand-slate-200 bg-white px-3 py-2.5 text-sm" />
+            <label className="mb-1 block text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-300">Revenue ($)</label>
+            <input type="number" {...register('revenue')} className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue" />
             {errors.revenue && <p className="mt-1 text-xs text-brand-red">{errors.revenue.message}</p>}
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-brand-slate-700">Notes</label>
-            <textarea {...register('notes')} rows="3" className="w-full rounded-xl border border-brand-slate-200 bg-white px-3 py-2.5 text-sm" />
+            <label className="mb-1 block text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-300">Notes</label>
+            <textarea {...register('notes')} rows="3" className="w-full rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-brand-slate-800 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue" />
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-brand-slate-200 pt-4">
-          <button type="button" onClick={onClose} className="rounded-xl border border-brand-slate-200 px-4 py-2 text-sm font-semibold text-brand-slate-700">
+        <div className="flex justify-end gap-3 border-t border-brand-slate-200 dark:border-brand-slate-800 pt-4">
+          <button type="button" onClick={onClose} className="rounded-xl border border-brand-slate-200 dark:border-brand-slate-800 px-4 py-2 text-sm font-semibold text-brand-slate-700 dark:text-brand-slate-300 hover:bg-brand-slate-100 dark:hover:bg-brand-slate-800">
             Cancel
           </button>
           <button type="submit" disabled={isSubmitting} className="rounded-xl bg-brand-blue px-4 py-2 text-sm font-semibold text-white">
