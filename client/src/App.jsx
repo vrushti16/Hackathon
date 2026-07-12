@@ -14,6 +14,10 @@ import Vehicles from './pages/Vehicles';
 import Maintenance from './pages/Maintenance';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import DriversPage from './pages/operations/DriversPage';
+import TripManagementPage from './pages/operations/TripManagementPage';
+import FuelPage from './pages/operations/FuelPage';
+import ExpensePage from './pages/operations/ExpensePage';
 
 function App() {
   return (
@@ -42,6 +46,10 @@ function App() {
                 <Route path="maintenance" element={<Maintenance />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="drivers" element={<DriversPage />} />
+                <Route path="trips" element={<TripManagementPage />} />
+                <Route path="fuel" element={<FuelPage />} />
+                <Route path="expenses" element={<ExpensePage />} />
               </Route>
 
               {/* Catch-all fallback redirects to dashboard */}

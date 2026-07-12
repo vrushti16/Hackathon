@@ -9,7 +9,11 @@ import {
   Settings, 
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Users,
+  Route,
+  Fuel,
+  ReceiptText
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -24,6 +28,10 @@ const Sidebar = ({
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Vehicles', path: '/vehicles', icon: Car },
+    { name: 'Drivers', path: '/drivers', icon: Users },
+    { name: 'Trips', path: '/trips', icon: Route },
+    { name: 'Fuel', path: '/fuel', icon: Fuel },
+    { name: 'Expenses', path: '/expenses', icon: ReceiptText },
     { name: 'Maintenance', path: '/maintenance', icon: Wrench },
     { name: 'Reports', path: '/reports', icon: BarChart3 },
     { name: 'Settings', path: '/settings', icon: Settings },
