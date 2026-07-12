@@ -21,6 +21,7 @@ import DriversPage from './pages/operations/DriversPage';
 import TripManagementPage from './pages/operations/TripManagementPage';
 import FuelPage from './pages/operations/FuelPage';
 import ExpensePage from './pages/operations/ExpensePage';
+import UserManagement from './pages/UserManagement';
 import { ROLES } from './auth/roleUtils';
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
                 <Route path="trips" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.FLEET_MANAGER, ROLES.DRIVER]}><TripManagementPage /></ProtectedRoute>} />
                 <Route path="fuel" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.DRIVER]}><FuelPage /></ProtectedRoute>} />
                 <Route path="expenses" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.FINANCIAL_ANALYST]}><ExpensePage /></ProtectedRoute>} />
+                <Route path="users" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><UserManagement /></ProtectedRoute>} />
               </Route>
 
               {/* Catch-all fallback redirects to dashboard */}

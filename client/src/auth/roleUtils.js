@@ -21,6 +21,7 @@ export const ROLE_PERMISSIONS = {
     '/expenses',
     '/reports',
     '/settings',
+    '/users'
   ],
   [ROLES.FLEET_MANAGER]: [
     '/dashboard',

@@ -13,7 +13,8 @@ import {
   Users,
   Route,
   Fuel,
-  ReceiptText
+  ReceiptText,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../auth/useAuth';
 
@@ -34,6 +35,7 @@ const Sidebar = React.memo(({
     { name: 'Expenses', path: '/expenses', icon: ReceiptText },
     { name: 'Maintenance', path: '/maintenance', icon: Wrench },
     { name: 'Reports', path: '/reports', icon: BarChart3 },
+    { name: 'User Management', path: '/users', icon: ShieldCheck },
     { name: 'Settings', path: '/settings', icon: Settings },
   ].filter(item => canAccessRoute(item.path)), [canAccessRoute]);
 
