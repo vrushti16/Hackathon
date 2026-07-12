@@ -10,7 +10,11 @@ const MaintenanceLogSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+  type: {
+    type: String
+  },
   cost: { 
+
     type: Number, 
     required: true, 
     default: 0 
