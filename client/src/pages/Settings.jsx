@@ -21,8 +21,7 @@ import { initDb } from '../services/mockDb';
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
-  role: z.string().min(1, 'Role is required'),
-  avatar: z.string().url('Invalid image URL').or(z.string().length(0))
+  role: z.string().min(1, 'Role is required')
 });
 
 const Settings = () => {
@@ -40,8 +39,7 @@ const Settings = () => {
     defaultValues: {
       name: user?.name || '',
       email: user?.email || '',
-      role: user?.role || '',
-      avatar: user?.avatar || ''
+      role: user?.role || ''
     }
   });
 
@@ -159,20 +157,7 @@ const Settings = () => {
                   )}
                 </div>
 
-                {/* Avatar URL */}
-                <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                  <label className="text-xs font-bold text-brand-slate-500 dark:text-brand-slate-400">Avatar Image URL</label>
-                  <input
-                    type="text"
-                    {...register('avatar')}
-                    className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-transparent text-brand-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue ${
-                      errors.avatar ? 'border-brand-red' : 'border-brand-slate-200 dark:border-brand-slate-800'
-                    }`}
-                  />
-                  {errors.avatar && (
-                    <p className="text-[10px] text-brand-red font-semibold">{errors.avatar.message}</p>
-                  )}
-                </div>
+
 
               </div>
 
